@@ -1,21 +1,27 @@
 openapi: 3.0.3
 info:
   title: Journey Orchestrator API
-  description: API for orchestrating product journeys using a state machine engine
+  description: |
+    Platform service responsible for orchestrating configurable product journeys
+    using a state machine model.
+
+    The service is business-agnostic and executes journey definitions configured
+    in the platform.
+
   version: 1.0.0
 
 servers:
-  - url: http://localhost:8080/v1
+  - url: http://localhost:8080
 
 tags:
-  - name: JourneyDefinitions
-  - name: JourneyInstances
+  - name: Journey Definitions
+  - name: Journey Instances
 
 paths:
-  /journeys:
+  /journey-definitions:
     post:
       tags:
-        - JourneyDefinitions
+        - Journey Definitions
       summary: Create a new journey definition
       operationId: createJourneyDefinition
       requestBody:
@@ -23,45 +29,61 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JourneyDefinitionRequest"
+              $ref: "#/components/schemas/JourneyDefinition"
       responses:
         "201":
-          description: Journey created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JourneyDefinitionResponse"
+          description: Journey definition created
 
-  /journeys/{journeyCode}/instances:
-    post:
+  /journey-definitions/{journeyCode}/{version}:
+    get:
       tags:
-        - JourneyInstances
-      summary: Start a new journey instance
-      operationId: startJourneyInstance
+        - Journey Definitions
+      summary: Get a journey definition
+      operationId: getJourneyDefinition
       parameters:
         - name: journeyCode
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/StartInstanceRequest"
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "201":
-          description: Instance started
+        "200":
+          description: Journey definition found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstanceResponse"
+                $ref: "#/components/schemas/JourneyDefinition"
 
-  /instances/{instanceId}:
+  /journey-instances:
+    post:
+      tags:
+        - Journey Instances
+      summary: Start a new journey instance
+      operationId: createJourneyInstance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJourneyInstanceRequest"
+      responses:
+        "201":
+          description: Journey instance created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyInstance"
+
+  /journey-instances/{instanceId}:
     get:
       tags:
-        - JourneyInstances
-      summary: Get journey instance
+        - Journey Instances
+      summary: Get journey instance state
       operationId: getJourneyInstance
       parameters:
         - name: instanceId
@@ -71,17 +93,17 @@ paths:
             type: string
       responses:
         "200":
-          description: Instance details
+          description: Journey instance found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstanceResponse"
+                $ref: "#/components/schemas/JourneyInstance"
 
-  /instances/{instanceId}/events:
+  /journey-instances/{instanceId}/events:
     post:
       tags:
-        - JourneyInstances
-      summary: Send event to journey instance
+        - Journey Instances
+      summary: Send event to a journey instance
       operationId: sendEvent
       parameters:
         - name: instanceId
@@ -90,6 +112,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -100,11 +123,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstanceResponse"
+                $ref: "#/components/schemas/JourneyInstance"
 
 components:
   schemas:
-    JourneyDefinitionRequest:
+    JourneyDefinition:
       type: object
       required:
         - journeyCode
@@ -122,52 +145,61 @@ components:
         states:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/State"
         transitions:
           type: array
           items:
             $ref: "#/components/schemas/Transition"
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    State:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - INITIAL
+            - INTERMEDIATE
+            - FINAL
 
     Transition:
       type: object
       required:
         - source
-        - target
         - event
+        - target
       properties:
         source:
           type: string
-        target:
-          type: string
         event:
           type: string
+        target:
+          type: string
 
-    JourneyDefinitionResponse:
+    CreateJourneyInstanceRequest:
       type: object
+      required:
+        - journeyCode
+        - version
       properties:
         journeyCode:
           type: string
         version:
           type: string
-        active:
-          type: boolean
-
-    StartInstanceRequest:
-      type: object
-      properties:
         context:
           type: object
           additionalProperties: true
 
-    EventRequest:
-      type: object
-      required:
-        - event
-      properties:
-        event:
-          type: string
-
-    JourneyInstanceResponse:
+    JourneyInstance:
       type: object
       properties:
         instanceId:
@@ -179,4 +211,21 @@ components:
         currentState:
           type: string
         status:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EventRequest:
+      type: object
+      required:
+        - event
+      properties:
+        event:
           type: string
