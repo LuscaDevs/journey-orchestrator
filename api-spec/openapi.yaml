@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Journey Orchestrator API
+  description: API for orchestrating product journeys using a state machine engine
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/v1
+
+tags:
+  - name: JourneyDefinitions
+  - name: JourneyInstances
+
+paths:
+  /journeys:
+    post:
+      tags:
+        - JourneyDefinitions
+      summary: Create a new journey definition
+      operationId: createJourneyDefinition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JourneyDefinitionRequest"
+      responses:
+        "201":
+          description: Journey created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyDefinitionResponse"
+
+  /journeys/{journeyCode}/instances:
+    post:
+      tags:
+        - JourneyInstances
+      summary: Start a new journey instance
+      operationId: startJourneyInstance
+      parameters:
+        - name: journeyCode
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartInstanceRequest"
+      responses:
+        "201":
+          description: Instance started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyInstanceResponse"
+
+  /instances/{instanceId}:
+    get:
+      tags:
+        - JourneyInstances
+      summary: Get journey instance
+      operationId: getJourneyInstance
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Instance details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyInstanceResponse"
+
+  /instances/{instanceId}/events:
+    post:
+      tags:
+        - JourneyInstances
+      summary: Send event to journey instance
+      operationId: sendEvent
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRequest"
+      responses:
+        "200":
+          description: Event processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyInstanceResponse"
+
+components:
+  schemas:
+    JourneyDefinitionRequest:
+      type: object
+      required:
+        - journeyCode
+        - version
+        - initialState
+        - states
+        - transitions
+      properties:
+        journeyCode:
+          type: string
+        version:
+          type: string
+        initialState:
+          type: string
+        states:
+          type: array
+          items:
+            type: string
+        transitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transition"
+
+    Transition:
+      type: object
+      required:
+        - source
+        - target
+        - event
+      properties:
+        source:
+          type: string
+        target:
+          type: string
+        event:
+          type: string
+
+    JourneyDefinitionResponse:
+      type: object
+      properties:
+        journeyCode:
+          type: string
+        version:
+          type: string
+        active:
+          type: boolean
+
+    StartInstanceRequest:
+      type: object
+      properties:
+        context:
+          type: object
+          additionalProperties: true
+
+    EventRequest:
+      type: object
+      required:
+        - event
+      properties:
+        event:
+          type: string
+
+    JourneyInstanceResponse:
+      type: object
+      properties:
+        instanceId:
+          type: string
+        journeyCode:
+          type: string
+        version:
+          type: string
+        currentState:
+          type: string
+        status:
+          type: string
