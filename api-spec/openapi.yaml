@@ -1,13 +1,10 @@
 openapi: 3.0.3
 info:
   title: Journey Orchestrator API
-  description: |
-    Platform service responsible for orchestrating configurable product journeys
-    using a state machine model.
-
-    The service is business-agnostic and executes journey definitions configured
-    in the platform.
-
+  description: >
+    Platform service responsible for executing configurable product journeys
+    using a state machine model. The service is business-agnostic and only
+    manages journey definitions and state transitions triggered by events.
   version: 1.0.0
 
 servers:
@@ -18,7 +15,7 @@ tags:
   - name: Journey Instances
 
 paths:
-  /journey-definitions:
+  /journeys:
     post:
       tags:
         - Journey Definitions
@@ -29,41 +26,57 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JourneyDefinition"
+              $ref: "#/components/schemas/CreateJourneyDefinitionRequest"
       responses:
         "201":
           description: Journey definition created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyDefinitionResponse"
 
-  /journey-definitions/{journeyCode}/{version}:
     get:
       tags:
         - Journey Definitions
-      summary: Get a journey definition
-      operationId: getJourneyDefinition
+      summary: List journey definitions
+      operationId: listJourneyDefinitions
+      responses:
+        "200":
+          description: List of journey definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JourneyDefinitionResponse"
+
+  /journeys/{journeyCode}:
+    get:
+      tags:
+        - Journey Definitions
+      summary: Get journey definitions by journey code
+      operationId: getJourneyDefinitionsByCode
       parameters:
         - name: journeyCode
           in: path
           required: true
           schema:
             type: string
-        - name: version
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         "200":
-          description: Journey definition found
+          description: Journey definitions found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyDefinition"
+                type: array
+                items:
+                  $ref: "#/components/schemas/JourneyDefinitionResponse"
 
   /journey-instances:
     post:
       tags:
         - Journey Instances
-      summary: Start a new journey instance
+      summary: Create a journey instance
       operationId: createJourneyInstance
       requestBody:
         required: true
@@ -77,13 +90,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstance"
+                $ref: "#/components/schemas/JourneyInstanceResponse"
 
   /journey-instances/{instanceId}:
     get:
       tags:
         - Journey Instances
-      summary: Get journey instance state
+      summary: Get journey instance by id
       operationId: getJourneyInstance
       parameters:
         - name: instanceId
@@ -97,7 +110,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstance"
+                $ref: "#/components/schemas/JourneyInstanceResponse"
 
   /journey-instances/{instanceId}/events:
     post:
@@ -123,11 +136,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JourneyInstance"
+                $ref: "#/components/schemas/JourneyInstanceResponse"
 
 components:
   schemas:
-    JourneyDefinition:
+    CreateJourneyDefinitionRequest:
       type: object
       required:
         - journeyCode
@@ -139,7 +152,7 @@ components:
         journeyCode:
           type: string
         version:
-          type: string
+          type: integer
         initialState:
           type: string
         states:
@@ -150,26 +163,17 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Transition"
-        active:
-          type: boolean
-        createdAt:
-          type: string
-          format: date-time
 
     State:
       type: object
       required:
         - name
-        - type
       properties:
         name:
           type: string
         type:
           type: string
-          enum:
-            - INITIAL
-            - INTERMEDIATE
-            - FINAL
+          description: INITIAL | NORMAL | FINAL
 
     Transition:
       type: object
@@ -185,6 +189,23 @@ components:
         target:
           type: string
 
+    JourneyDefinitionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        journeyCode:
+          type: string
+        version:
+          type: integer
+        initialState:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
     CreateJourneyInstanceRequest:
       type: object
       required:
@@ -194,33 +215,10 @@ components:
         journeyCode:
           type: string
         version:
-          type: string
+          type: integer
         context:
           type: object
           additionalProperties: true
-
-    JourneyInstance:
-      type: object
-      properties:
-        instanceId:
-          type: string
-        journeyCode:
-          type: string
-        version:
-          type: string
-        currentState:
-          type: string
-        status:
-          type: string
-        context:
-          type: object
-          additionalProperties: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
 
     EventRequest:
       type: object
@@ -229,3 +227,26 @@ components:
       properties:
         event:
           type: string
+        payload:
+          type: object
+          additionalProperties: true
+
+    JourneyInstanceResponse:
+      type: object
+      properties:
+        instanceId:
+          type: string
+        journeyCode:
+          type: string
+        version:
+          type: integer
+        currentState:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
