@@ -1,49 +1,21 @@
 package com.luscadevs.journeyorchestrator.domain.journey;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(of = "name")
 public class State {
+
     private String name;
-    private Boolean isInitial;
-    private Boolean isFinal;
-    private String initialState;
-    private String finalState;
 
-    public String getName() {
-        return name;
-    }
+    private boolean initial;
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Boolean getIsInitial() {
-        return isInitial;
-    }
-
-    public void setIsInitial(Boolean isInitial) {
-        this.isInitial = isInitial;
-    }
-
-    public Boolean isFinal() {
-        return isFinal;
-    }
-
-    public void setIsFinal(Boolean isFinal) {
-        this.isFinal = isFinal;
-    }
-
-    public String getInitialState() {
-        return initialState;
-    }
-
-    public void setInitialState(String initialState) {
-        this.initialState = initialState;
-    }
-
-    public String getFinalState() {
-        return finalState;
-    }
-
-    public void setFinalState(String finalState) {
-        this.finalState = finalState;
-    }
+    private boolean finalState;
 }

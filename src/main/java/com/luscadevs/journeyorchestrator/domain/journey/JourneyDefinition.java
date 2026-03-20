@@ -2,37 +2,35 @@ package com.luscadevs.journeyorchestrator.domain.journey;
 
 import java.util.List;
 
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
 public class JourneyDefinition {
     private String id;
     private String name;
     private Integer version;
     private Boolean active;
-    private String initialState;
+    private State initialState;
     private List<State> states;
     private List<Transition> transitions;
 
-    public List<Transition> getTransitions() {
-        return transitions;
-    }
-
-    public String getId() {
-        return id;
+    public Transition findTransition(State fromState, Event event) {
+        for (Transition transition : transitions) {
+            if (transition.getSourceState().equals(fromState) && transition.getEvent().equals(event)) {
+                return transition;
+            }
+        }
+        return null;
     }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Integer getVersion() {
-        return version;
     }
 
     public void setVersion(Integer version) {
@@ -43,20 +41,8 @@ public class JourneyDefinition {
         return active;
     }
 
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public String getInitialState() {
-        return initialState;
-    }
-
-    public void setInitialState(String initialState) {
+    public void setInitialState(State initialState) {
         this.initialState = initialState;
-    }
-
-    public List<State> getStates() {
-        return states;
     }
 
     public void setStates(List<State> states) {

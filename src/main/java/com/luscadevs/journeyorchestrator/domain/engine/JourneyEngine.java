@@ -1,6 +1,6 @@
 package com.luscadevs.journeyorchestrator.domain.engine;
 
-import java.time.Instant;
+import org.springframework.stereotype.Component;
 
 import com.luscadevs.journeyorchestrator.application.engine.exception.InvalidTransitionException;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
@@ -8,66 +8,33 @@ import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
-import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstanceStatus;
-import com.luscadevs.journeyorchestrator.domain.journeyinstance.TransitionHistory;
 
+@Component
 public class JourneyEngine {
 
     public void applyEvent(JourneyInstance journeyInstance, JourneyDefinition journeyDefinition, Event event) {
         // 1. pegar estado atual
-        String currentState = journeyInstance.getCurrentState();
+        State currentState = journeyInstance.getCurrentState();
 
         // 2. procurar transição válida
-        Transition validTransition = null;
+        Transition validTransition = journeyDefinition.findTransition(currentState, event);
 
-        for (Transition transition : journeyDefinition.getTransitions()) {
-            boolean sameSource = transition.getSourceState().equals(currentState);
-            boolean sameEvent = transition.getEvent().equals(event.getName());
-
-            if (sameSource && sameEvent) {
-                validTransition = transition;
-                break;
-            }
-        }
-
-        // 3. validar se encontrou transição
+        // 3. verificar se a transição é válida
         if (validTransition == null) {
             throw new InvalidTransitionException(
                     "Event " + event.getName() +
-                            " not allowed in state " + currentState);
+                            " not allowed in state " + currentState.getName());
         }
 
-        // 4. guardar estado antigo
-        String oldState = journeyInstance.getCurrentState();
+        // 4. atualizar estado atual
+        journeyInstance.transitionTo(validTransition.getTargetState(), event);
 
-        // 5. atualizar estado atual
-        journeyInstance.setCurrentState(validTransition.getTargetState());
+        // 5. verificar se o novo estado é terminal
+        State newState = journeyInstance.getCurrentState();
 
-        // 6. atualizar timestamp
-        Instant now = Instant.now();
-        journeyInstance.setUpdatedAt(now);
-
-        // 7. guardar histórico
-        TransitionHistory historyEntry = new TransitionHistory();
-        historyEntry.setFromState(oldState);
-        historyEntry.setToState(validTransition.getTargetState());
-        historyEntry.setEvent(event.getName());
-        historyEntry.setTimestamp(now);
-
-        journeyInstance.getHistory().add(historyEntry);
-
-        // 8. verificar se o novo estado é terminal
-        State newState = null;
-
-        for (State state : journeyDefinition.getStates()) {
-            if (state.getName().equals(validTransition.getTargetState())) {
-                newState = state;
-                break;
-            }
-        }
-
-        if (newState != null && newState.isFinal()) {
-            journeyInstance.setStatus(JourneyInstanceStatus.COMPLETED);
+        if (newState != null && newState.isFinalState()) {
+            journeyInstance.complete();
         }
     }
+
 }

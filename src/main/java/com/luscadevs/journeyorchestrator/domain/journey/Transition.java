@@ -1,33 +1,22 @@
 package com.luscadevs.journeyorchestrator.domain.journey;
 
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
 public class Transition {
-    private String sourceState;
-    private String event;
-    private String targetState;
+    private State sourceState;
+    private Event event;
+    private State targetState;
     private Boolean automatic;
 
-    public String getSourceState() {
-        return sourceState;
-    }
-
-    public void setSourceState(String sourceState) {
+    public void setSourceState(State sourceState) {
         this.sourceState = sourceState;
     }
 
-    public String getEvent() {
-        return event;
-    }
-
-    public void setEvent(String event) {
+    public void setEvent(Event event) {
         this.event = event;
-    }
-
-    public String getTargetState() {
-        return targetState;
-    }
-
-    public void setTargetState(String targetState) {
-        this.targetState = targetState;
     }
 
     public Boolean isAutomatic() {

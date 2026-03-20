@@ -2,32 +2,21 @@ package com.luscadevs.journeyorchestrator.domain.journey;
 
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+@Builder
+@Getter
+@AllArgsConstructor
+@EqualsAndHashCode(of = "name")
 public class Event {
     private String name;
     private String description;
     private Map<String, Object> metadata;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Event(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
     }
 }
