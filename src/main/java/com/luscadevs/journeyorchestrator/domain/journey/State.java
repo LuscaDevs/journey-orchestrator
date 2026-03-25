@@ -15,7 +15,5 @@ public class State {
 
     private String name;
 
-    private boolean initial;
-
-    private boolean finalState;
+    private StateType type;
 }

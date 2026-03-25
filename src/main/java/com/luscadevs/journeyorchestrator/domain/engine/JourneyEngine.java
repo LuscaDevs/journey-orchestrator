@@ -6,6 +6,7 @@ import com.luscadevs.journeyorchestrator.application.engine.exception.InvalidTra
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
+import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
 
@@ -32,7 +33,7 @@ public class JourneyEngine {
         // 5. verificar se o novo estado é terminal
         State newState = journeyInstance.getCurrentState();
 
-        if (newState != null && newState.isFinalState()) {
+        if (newState != null && newState.getType() == StateType.FINAL) {
             journeyInstance.complete();
         }
     }

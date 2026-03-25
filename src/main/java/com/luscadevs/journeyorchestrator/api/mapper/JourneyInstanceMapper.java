@@ -1,22 +1,26 @@
 package com.luscadevs.journeyorchestrator.api.mapper;
 
-import com.luscadevs.journeyorchestrator.api.dto.JourneyInstanceResponse;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
+import com.luscadevs.journey.api.generated.model.JourneyInstanceResponse;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
 
 public class JourneyInstanceMapper {
 
-    public static JourneyInstanceResponse toResponse(JourneyInstance instance) {
+    public static JourneyInstanceResponse toResponse(
+            JourneyInstance instance) {
+        JourneyInstanceResponse response = new JourneyInstanceResponse();
 
-        return JourneyInstanceResponse.builder()
-                .id(instance.getId())
-                .journeyDefinitionId(instance.getJourneyDefinitionId())
-                .journeyVersion(instance.getJourneyVersion())
-                .status(instance.getStatus().name())
-                .currentState(instance.getCurrentState().getName())
-                .context(instance.getContext())
-                .history(instance.getHistory())
-                .createdAt(instance.getCreatedAt())
-                .updatedAt(instance.getUpdatedAt())
-                .build();
+        response.instanceId(instance.getId());
+        response.journeyCode(instance.getJourneyDefinitionId());
+        response.version(instance.getJourneyVersion());
+        response.currentState(instance.getCurrentState().getName());
+        response.status(instance.getStatus());
+
+        response.createdAt(OffsetDateTime.ofInstant(instance.getCreatedAt(), ZoneOffset.UTC));
+        response.updatedAt(OffsetDateTime.ofInstant(instance.getUpdatedAt(), ZoneOffset.UTC));
+
+        return response;
     }
 }

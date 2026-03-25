@@ -2,9 +2,9 @@ openapi: 3.0.3
 info:
   title: Journey Orchestrator API
   description: >
-    Platform service responsible for executing configurable product journeys
-    using a state machine model. The service is business-agnostic and only
-    manages journey definitions and state transitions triggered by events.
+    Platform service responsible for executing configurable journeys using a
+    state machine model. The service is business-agnostic and manages journey
+    definitions and journey instances driven by events.
   version: 1.0.0
 
 servers:
@@ -15,6 +15,7 @@ tags:
   - name: Journey Instances
 
 paths:
+
   /journeys:
     post:
       tags:
@@ -38,7 +39,7 @@ paths:
     get:
       tags:
         - Journey Definitions
-      summary: List journey definitions
+      summary: List all journey definitions
       operationId: listJourneyDefinitions
       responses:
         "200":
@@ -54,7 +55,7 @@ paths:
     get:
       tags:
         - Journey Definitions
-      summary: Get journey definitions by journey code
+      summary: Get all versions of a journey definition
       operationId: getJourneyDefinitionsByCode
       parameters:
         - name: journeyCode
@@ -76,7 +77,7 @@ paths:
     post:
       tags:
         - Journey Instances
-      summary: Create a journey instance
+      summary: Start a new journey instance
       operationId: createJourneyInstance
       requestBody:
         required: true
@@ -139,22 +140,24 @@ paths:
                 $ref: "#/components/schemas/JourneyInstanceResponse"
 
 components:
+
   schemas:
+
     CreateJourneyDefinitionRequest:
       type: object
       required:
         - journeyCode
+        - name
         - version
-        - initialState
         - states
         - transitions
       properties:
         journeyCode:
           type: string
+        name:
+          type: string
         version:
           type: integer
-        initialState:
-          type: string
         states:
           type: array
           items:
@@ -162,20 +165,52 @@ components:
         transitions:
           type: array
           items:
-            $ref: "#/components/schemas/Transition"
+            $ref: "#/components/schemas/TransitionRequest"
+
+    JourneyDefinitionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        journeyCode:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+        states:
+          type: array
+          items:
+            $ref: "#/components/schemas/State"
+        transitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransitionResponse"
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
 
     State:
       type: object
       required:
         - name
+        - type
       properties:
         name:
           type: string
         type:
-          type: string
-          description: INITIAL | NORMAL | FINAL
+          $ref: "#/components/schemas/StateType"
 
-    Transition:
+    StateType:
+      type: string
+      enum:
+        - INITIAL
+        - NORMAL
+        - FINAL
+
+    TransitionRequest:
       type: object
       required:
         - source
@@ -189,22 +224,15 @@ components:
         target:
           type: string
 
-    JourneyDefinitionResponse:
+    TransitionResponse:
       type: object
       properties:
-        id:
+        source:
           type: string
-        journeyCode:
+        event:
           type: string
-        version:
-          type: integer
-        initialState:
+        target:
           type: string
-        active:
-          type: boolean
-        createdAt:
-          type: string
-          format: date-time
 
     CreateJourneyInstanceRequest:
       type: object
@@ -243,10 +271,18 @@ components:
         currentState:
           type: string
         status:
-          type: string
+          $ref: "#/components/schemas/JourneyStatus"
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+
+    JourneyStatus:
+      type: string
+      enum:
+        - RUNNING
+        - COMPLETED
+        - FAILED
+        - CANCELLED

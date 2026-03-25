@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.luscadevs.journey.api.generated.model.JourneyStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 
@@ -17,7 +18,7 @@ public class JourneyInstance {
     private String journeyDefinitionId;
     private Integer journeyVersion;
     private State currentState;
-    private JourneyInstanceStatus status;
+    private JourneyStatus status;
     private Instant createdAt;
     private Instant updatedAt;
     private List<TransitionHistory> history;
@@ -29,7 +30,8 @@ public class JourneyInstance {
                 this.currentState,
                 newState,
                 event,
-                Instant.now());
+                Instant.now(),
+                null);
 
         Instant now = Instant.now();
         this.currentState = newState;
@@ -51,7 +53,7 @@ public class JourneyInstance {
         instance.journeyDefinitionId = definitionId;
         instance.journeyVersion = version;
         instance.currentState = initialState;
-        instance.status = JourneyInstanceStatus.ACTIVE;
+        instance.status = JourneyStatus.RUNNING;
         instance.createdAt = Instant.now();
         instance.updatedAt = Instant.now();
 
@@ -62,12 +64,12 @@ public class JourneyInstance {
     }
 
     public void complete() {
-        this.status = JourneyInstanceStatus.COMPLETED;
+        this.status = JourneyStatus.COMPLETED;
         this.updatedAt = Instant.now();
     }
 
     public void cancel() {
-        this.status = JourneyInstanceStatus.CANCELLED;
+        this.status = JourneyStatus.CANCELLED;
         this.updatedAt = Instant.now();
     }
 }
