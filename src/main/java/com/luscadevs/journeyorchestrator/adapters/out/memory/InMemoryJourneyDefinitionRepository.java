@@ -18,8 +18,8 @@ public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRep
     private final Map<String, JourneyDefinition> storage = new HashMap<>();
 
     @Override
-    public Optional<JourneyDefinition> findByIdAndVersion(String id, Integer version) {
-        return Optional.ofNullable(storage.get(key(id, version)));
+    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String journeyCode, Integer version) {
+        return Optional.ofNullable(storage.get(key(journeyCode, version)));
     }
 
     @Override
@@ -34,12 +34,12 @@ public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRep
                     .createdAt(Instant.now())
                     .build();
         }
-        storage.put(key(journeyDefinition.getId(), journeyDefinition.getVersion()), journeyDefinition);
+        storage.put(key(journeyDefinition.getJourneyCode(), journeyDefinition.getVersion()), journeyDefinition);
         return journeyDefinition;
     }
 
-    private String key(String id, Integer version) {
-        return id + ":" + version;
+    private String key(String journeyCode, Integer version) {
+        return journeyCode + ":" + version;
     }
 
     @Override

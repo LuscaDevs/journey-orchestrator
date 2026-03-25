@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.luscadevs.journeyorchestrator.application.port.in.JourneyInstanceUseCase;
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyDefinitionRepositoryPort;
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyInstanceRepositoryPort;
 import com.luscadevs.journeyorchestrator.domain.engine.JourneyEngine;
@@ -13,7 +12,7 @@ import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
 
 @Service
-public class JourneyInstanceService implements JourneyInstanceUseCase {
+public class JourneyInstanceService {
     private final JourneyInstanceRepositoryPort journeyInstanceRepository;
     private final JourneyDefinitionRepositoryPort journeyDefinitionRepository;
     private final JourneyEngine journeyEngine;
@@ -25,9 +24,8 @@ public class JourneyInstanceService implements JourneyInstanceUseCase {
         this.journeyEngine = journeyEngine;
     }
 
-    @Override
     public JourneyInstance startJourney(String journeyCode, Integer version, Map<String, Object> context) {
-        JourneyDefinition definition = journeyDefinitionRepository.findByIdAndVersion(journeyCode, version)
+        JourneyDefinition definition = journeyDefinitionRepository.findByJourneyCodeAndVersion(journeyCode, version)
                 .orElseThrow(() -> new RuntimeException(
                         "Journey definition not found: " + journeyCode + " version: " + version));
         JourneyInstance instance = JourneyInstance.start(journeyCode, version, definition.getInitialState(), context);
@@ -35,13 +33,12 @@ public class JourneyInstanceService implements JourneyInstanceUseCase {
         return journeyInstanceRepository.save(instance);
     }
 
-    @Override
     public JourneyInstance applyEvent(String instanceId, Event event) {
         JourneyInstance instance = journeyInstanceRepository.findById(instanceId)
                 .orElseThrow(() -> new RuntimeException("Journey instance not found: " + instanceId));
 
         JourneyDefinition definition = journeyDefinitionRepository
-                .findByIdAndVersion(instance.getJourneyDefinitionId(), instance.getJourneyVersion())
+                .findByJourneyCodeAndVersion(instance.getJourneyDefinitionId(), instance.getJourneyVersion())
                 .orElseThrow(() -> new RuntimeException(
                         "Journey definition not found: " + instance.getJourneyDefinitionId()));
         Event appliedEvent = event;
@@ -51,7 +48,6 @@ public class JourneyInstanceService implements JourneyInstanceUseCase {
         return journeyInstanceRepository.save(instance);
     }
 
-    @Override
     public JourneyInstance getInstance(String instanceId) {
         return journeyInstanceRepository.findById(instanceId)
                 .orElseThrow(() -> new RuntimeException("Journey instance not found: " + instanceId));

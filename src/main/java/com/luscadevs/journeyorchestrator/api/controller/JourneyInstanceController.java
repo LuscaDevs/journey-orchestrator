@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 
 @RestController
 public class JourneyInstanceController implements JourneyInstancesApi {
+
     private final JourneyInstanceService journeyInstanceService;
 
     public JourneyInstanceController(JourneyInstanceService journeyInstanceService) {
@@ -35,7 +36,8 @@ public class JourneyInstanceController implements JourneyInstancesApi {
     @Override
     public ResponseEntity<JourneyInstanceResponse> getJourneyInstance(@NotNull String instanceId) {
         JourneyInstance journeyInstance = journeyInstanceService.getInstance(instanceId);
-        return ResponseEntity.ok(JourneyInstanceMapper.toResponse(journeyInstance));
+        JourneyInstanceResponse response = JourneyInstanceMapper.toResponse(journeyInstance);
+        return ResponseEntity.ok(response);
     }
 
     @Override

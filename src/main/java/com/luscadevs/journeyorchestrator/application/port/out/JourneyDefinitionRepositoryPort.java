@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 
 public interface JourneyDefinitionRepositoryPort {
-    public Optional<JourneyDefinition> findByIdAndVersion(String id, Integer version);
+    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String id, Integer version);
 
     public List<JourneyDefinition> findByCode(String code);
 

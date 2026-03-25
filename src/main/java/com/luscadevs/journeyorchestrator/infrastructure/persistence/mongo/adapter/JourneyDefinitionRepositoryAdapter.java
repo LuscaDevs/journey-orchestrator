@@ -10,9 +10,9 @@ import com.luscadevs.journeyorchestrator.infrastructure.persistence.mongo.docume
 public class JourneyDefinitionRepositoryAdapter implements JourneyDefinitionRepositoryPort {
 
     @Override
-    public Optional<JourneyDefinition> findByIdAndVersion(String id, Integer version) {
+    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String id, Integer version) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByIdAndVersion'");
+        throw new UnsupportedOperationException("Unimplemented method 'findByJourneyCodeAndVersion'");
     }
 
     @Override

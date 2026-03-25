@@ -32,7 +32,7 @@ public class JourneyDefinitionService {
 
         public JourneyDefinition getJourneyDefinition(String id, Integer version) {
                 return repository
-                                .findByIdAndVersion(id, version)
+                                .findByJourneyCodeAndVersion(id, version)
                                 .orElseThrow(() -> new RuntimeException("Journey definition not found"));
         }
 
