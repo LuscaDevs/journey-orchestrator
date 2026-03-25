@@ -2,6 +2,7 @@ package com.luscadevs.journeyorchestrator.adapters.in.web;
 
 import com.luscadevs.journeyorchestrator.domain.exception.DomainException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
+import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlreadyExistsException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyInstanceNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidStateTransitionException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyAlreadyCompletedException;
@@ -119,6 +120,36 @@ public class GlobalExceptionHandler {
 
                 return ResponseEntity
                                 .status(HttpStatus.NOT_FOUND)
+                                .body(errorResponse.getProblemDetail());
+        }
+
+        /**
+         * Handles JourneyDefinitionAlreadyExistsException with specific logging.
+         * 
+         * @param ex      The exception that occurred
+         * @param request The HTTP request for context
+         * @return ResponseEntity with ProblemDetail and HTTP 409 status
+         */
+        @ExceptionHandler(JourneyDefinitionAlreadyExistsException.class)
+        public ResponseEntity<ProblemDetail> handleJourneyDefinitionAlreadyExistsException(
+                        JourneyDefinitionAlreadyExistsException ex,
+                        HttpServletRequest request) {
+
+                String correlationId = getOrCreateCorrelationId(request);
+                setupLoggingContext(correlationId, ex, request);
+
+                log.warn("Journey definition already exists: {} | Path: {} | Requester context: {} | CorrelationId: {}",
+                                ex.getJourneyDefinitionId(),
+                                request.getRequestURI(),
+                                sanitizeContext(ex.getContext()),
+                                correlationId);
+
+                ErrorResponseProblemDetail errorResponse = ErrorResponseProblemDetail.from(ex, request);
+
+                clearLoggingContext();
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
                                 .body(errorResponse.getProblemDetail());
         }
 

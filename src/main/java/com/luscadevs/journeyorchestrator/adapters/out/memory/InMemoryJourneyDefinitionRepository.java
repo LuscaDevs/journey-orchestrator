@@ -43,11 +43,12 @@ public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRep
     }
 
     @Override
-    public List<JourneyDefinition> findByCode(String code) {
-        return storage.values().stream()
+    public Optional<List<JourneyDefinition>> findByCode(String code) {
+        List<JourneyDefinition> results = storage.values().stream()
                 .filter(journeyDefinition -> journeyDefinition.getJourneyCode() != null
                         && journeyDefinition.getJourneyCode().equals(code))
                 .toList();
+        return Optional.of(results);
     }
 
     @Override

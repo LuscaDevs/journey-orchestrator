@@ -32,7 +32,7 @@ public class JourneyDefinitionRepositoryAdapter implements JourneyDefinitionRepo
     }
 
     @Override
-    public List<JourneyDefinition> findByCode(String code) {
+    public Optional<List<JourneyDefinition>> findByCode(String code) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findByCode'");
     }

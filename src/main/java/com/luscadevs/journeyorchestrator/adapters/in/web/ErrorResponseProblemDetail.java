@@ -78,6 +78,7 @@ public class ErrorResponseProblemDetail {
     private static HttpStatus getHttpStatusForErrorCode(ErrorCode errorCode) {
         return switch (errorCode) {
             case JOURNEY_DEFINITION_NOT_FOUND, JOURNEY_INSTANCE_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case JOURNEY_DEFINITION_ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case INVALID_STATE_TRANSITION, JOURNEY_ALREADY_COMPLETED -> HttpStatus.valueOf(422); // Unprocessable Entity
             case CONCURRENT_MODIFICATION, RESOURCE_LOCKED -> HttpStatus.CONFLICT;
             case VALIDATION_FAILED, INVALID_REQUEST_FORMAT, MISSING_REQUIRED_FIELD -> HttpStatus.BAD_REQUEST;

@@ -60,6 +60,7 @@ public class JourneyDefinitionController implements JourneysApi {
     @Override
     public ResponseEntity<List<JourneyDefinitionResponse>> listJourneyDefinitions() {
         List<JourneyDefinition> definitions = journeyDefinitionService.getAllJourneyDefinitions();
+
         logger.info("Found {} journey definitions", definitions.size());
 
         List<JourneyDefinitionResponse> responses = definitions.stream()
@@ -73,6 +74,7 @@ public class JourneyDefinitionController implements JourneysApi {
                     }
                 })
                 .toList();
+
         return ResponseEntity.ok(responses);
     }
 
