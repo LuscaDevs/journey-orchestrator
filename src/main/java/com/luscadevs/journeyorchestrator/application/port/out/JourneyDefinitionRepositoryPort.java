@@ -8,7 +8,7 @@ import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 public interface JourneyDefinitionRepositoryPort {
     public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String id, Integer version);
 
-    public List<JourneyDefinition> findByCode(String code);
+    public Optional<List<JourneyDefinition>> findByCode(String code);
 
     public List<JourneyDefinition> findAll();
 
