@@ -32,10 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-
-### Specify ###
-.specify/
-
-### Windsurf ###
-.windsurf/
-.windsurfrules
