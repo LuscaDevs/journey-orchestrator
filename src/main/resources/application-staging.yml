@@ -1,0 +1,22 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://staging-mongo-cluster:27017/journey_orchestrator_staging
+      auto-index-creation: false
+  
+  # Staging-specific settings
+  jpa:
+    show-sql: false
+
+# MongoDB configuration for staging
+journey-orchestrator:
+  mongodb:
+    connection-timeout: 10000
+    max-pool-size: 20
+    min-pool-size: 5
+    auto-index-creation: false
+
+logging:
+  level:
+    com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo: INFO
+    org.springframework.data.mongodb: INFO
