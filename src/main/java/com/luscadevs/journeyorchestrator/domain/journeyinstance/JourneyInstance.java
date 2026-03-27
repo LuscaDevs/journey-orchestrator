@@ -10,9 +10,11 @@ import com.luscadevs.journey.api.generated.model.JourneyStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class JourneyInstance {
     private String id;
     private String journeyDefinitionId;
@@ -46,21 +48,18 @@ public class JourneyInstance {
             State initialState,
             Map<String, Object> context) {
 
-        JourneyInstance instance = new JourneyInstance();
+        return JourneyInstance.builder()
+                .id(UUID.randomUUID().toString())
+                .journeyDefinitionId(definitionId)
+                .journeyVersion(version)
+                .currentState(initialState)
+                .status(JourneyStatus.RUNNING)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .context(context)
+                .history(new ArrayList<>())
+                .build();
 
-        instance.id = UUID.randomUUID().toString();
-
-        instance.journeyDefinitionId = definitionId;
-        instance.journeyVersion = version;
-        instance.currentState = initialState;
-        instance.status = JourneyStatus.RUNNING;
-        instance.createdAt = Instant.now();
-        instance.updatedAt = Instant.now();
-
-        instance.context = context;
-        instance.history = new ArrayList<>();
-
-        return instance;
     }
 
     public void complete() {

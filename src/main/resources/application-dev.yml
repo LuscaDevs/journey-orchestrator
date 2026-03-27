@@ -1,0 +1,25 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/journey_orchestrator_dev
+      auto-index-creation: true
+  
+  # Development-specific settings
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# MongoDB configuration for development
+journey-orchestrator:
+  mongodb:
+    connection-timeout: 5000
+    max-pool-size: 10
+    min-pool-size: 2
+    auto-index-creation: true
+
+logging:
+  level:
+    com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo: DEBUG
+    org.springframework.data.mongodb: DEBUG

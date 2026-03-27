@@ -1,0 +1,33 @@
+spring:
+  data:
+    mongodb:
+      # URI should be provided via environment variables in production
+      uri: ${MONGODB_URI:mongodb://localhost:27017/journey_orchestrator_prod}
+      auto-index-creation: false
+  
+  # Production-specific settings
+  jpa:
+    show-sql: false
+
+# MongoDB configuration for production
+journey-orchestrator:
+  mongodb:
+    connection-timeout: 15000
+    max-pool-size: 50
+    min-pool-size: 10
+    auto-index-creation: false
+
+logging:
+  level:
+    com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo: WARN
+    org.springframework.data.mongodb: WARN
+
+# Actuator endpoints for production monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
