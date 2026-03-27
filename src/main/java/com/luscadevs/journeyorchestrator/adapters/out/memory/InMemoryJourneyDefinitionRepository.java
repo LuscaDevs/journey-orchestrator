@@ -6,14 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyDefinitionRepositoryPort;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 
 @Repository
-@Primary
 public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRepositoryPort {
     private final Map<String, JourneyDefinition> storage = new HashMap<>();
 
