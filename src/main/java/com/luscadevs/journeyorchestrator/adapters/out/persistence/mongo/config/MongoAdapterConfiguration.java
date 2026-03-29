@@ -15,7 +15,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 /**
@@ -63,11 +62,7 @@ public class MongoAdapterConfiguration {
     }
 
     /**
-     * Optional bean for custom MongoDB operations.
-     * Can be injected into repositories for complex queries.
+     * MongoTemplate is automatically configured by Spring Boot.
+     * No need to define it manually here.
      */
-    @Bean
-    public MongoTemplate mongoTemplate(org.springframework.data.mongodb.MongoDatabaseFactory mongoDatabaseFactory) {
-        return new MongoTemplate(mongoDatabaseFactory);
-    }
 }
