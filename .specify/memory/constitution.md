@@ -4,7 +4,7 @@
 
 This project follows modern enterprise architecture patterns:
 
-- **Specification-Driven Development (Spec First)**: API contracts are defined in OpenAPI before implementation
+- **Specification-Driven Development (Spec First)**: API contracts MUST be defined in the central OpenAPI specification (`api-spec/openapi.yaml`) BEFORE any implementation. All code generation flows from this single source of truth.
 - **Clean Architecture**: Hexagonal architecture with clear separation of concerns
 - **Domain-Driven Design (DDD)**: Domain-centric modeling with rich domain objects
 - **SOLID Principles**: Single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion
@@ -90,13 +90,13 @@ src/main/java/com/luscadevs/journeyorchestrator/
 
 ## Development Workflow
 
-1. **Define API Contract**: Update `api-spec/openapi.yaml`
-2. **Generate Code**: Run Maven generate-sources to create API stubs
+1. **Define API Contract**: Update the central `api-spec/openapi.yaml` FIRST - this is the single source of truth
+2. **Generate Code**: Run Maven generate-sources to create API stubs from the OpenAPI specification
 3. **Implement Domain**: Create domain entities and business logic
 4. **Implement Application**: Create services and use cases
 5. **Implement Adapters**: Create controllers and repositories
 6. **Test**: Write unit and integration tests
-7. **Validate**: Run contract tests to ensure API compliance
+7. **Validate**: Run contract tests to ensure API compliance with the OpenAPI specification
 
 ## Configuration Management
 
@@ -123,8 +123,9 @@ src/main/java/com/luscadevs/journeyorchestrator/
 
 ## Quality Gates
 
-- All code must follow the established package structure
-- API changes must be reflected in OpenAPI specification first
-- Domain logic must be testable without infrastructure
-- Services must depend on abstractions (ports), not concretions
-- All public APIs must have appropriate validation
+- All code MUST follow the established package structure
+- API changes MUST be reflected in the central `api-spec/openapi.yaml` specification FIRST before any implementation
+- Domain logic MUST be testable without infrastructure
+- Services MUST depend on abstractions (ports), not concretions
+- All public APIs MUST have appropriate validation
+- **Specification-Driven Development**: API contracts MUST be defined in OpenAPI before implementation - this is MANDATORY, not optional

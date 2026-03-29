@@ -13,6 +13,7 @@ servers:
 tags:
   - name: Journey Definitions
   - name: Journey Instances
+  - name: Journey Instance History
 
 paths:
 
@@ -138,6 +139,83 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JourneyInstanceResponse"
+
+  /journey-instances/{instanceId}/history:
+    get:
+      tags:
+        - Journey Instance History
+      summary: Get transition history for a journey instance
+      description: Retrieves the complete transition history for a specific journey instance in chronological order
+      operationId: getJourneyInstanceHistory
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          description: ID of the journey instance
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Filter history from this timestamp (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          description: Filter history to this timestamp (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: eventType
+          in: query
+          required: false
+          description: Filter by specific event type
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of events to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          description: Number of events to skip (for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Transition history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransitionHistoryListResponse"
+        '404':
+          description: Journey instance not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
 
@@ -286,3 +364,106 @@ components:
         - COMPLETED
         - FAILED
         - CANCELLED
+
+    TransitionHistoryListResponse:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          description: ID of the journey instance
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransitionHistoryEventResponse"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+        totalCount:
+          type: integer
+          description: Total number of events in history
+
+    TransitionHistoryEventResponse:
+      type: object
+      required:
+        - id
+        - instanceId
+        - fromState
+        - toState
+        - event
+        - timestamp
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the history event
+        instanceId:
+          type: string
+          description: ID of the journey instance
+        fromState:
+          type: string
+          description: Previous state before transition
+        toState:
+          type: string
+          description: New state after transition
+        event:
+          $ref: "#/components/schemas/EventInfo"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the transition occurred (ISO 8601)
+        metadata:
+          type: object
+          description: Additional context information
+          additionalProperties: true
+        sequenceNumber:
+          type: integer
+          description: Sequence number for ordering same-millisecond events
+
+    EventInfo:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Type of the event that triggered the transition
+        data:
+          type: object
+          description: Event-specific data
+          additionalProperties: true
+
+    PaginationInfo:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Number of events returned in this page
+        offset:
+          type: integer
+          description: Number of events skipped
+        hasNext:
+          type: boolean
+          description: Whether there are more events available
+        hasPrevious:
+          type: boolean
+          description: Whether there are previous events available
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              description: Additional error details
+              additionalProperties: true

@@ -28,18 +28,20 @@ public class JourneyInstance {
 
     public void transitionTo(State newState, Event event) {
 
-        TransitionHistory historyEntry = new TransitionHistory(
-                this.currentState,
-                newState,
-                event,
-                Instant.now(),
-                null);
+        TransitionHistory historyEntry = TransitionHistory.builder()
+                .id(TransitionHistoryEventId.generate())
+                .instanceId(this.id)
+                .fromState(this.currentState)
+                .toState(newState)
+                .event(event)
+                .timestamp(Instant.now())
+                .metadata(Map.of())
+                .build();
 
         Instant now = Instant.now();
         this.currentState = newState;
         this.updatedAt = now;
         this.history.add(historyEntry);
-        this.updatedAt = now;
     }
 
     public static JourneyInstance start(

@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.infrastructure.persistence.mongo.adapter;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyInstanceRepositoryPort;
@@ -18,6 +19,12 @@ public class JourneyInstanceRepositoryAdapter implements JourneyInstanceReposito
     public Optional<JourneyInstance> findById(String instanceId) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findById'");
+    }
+
+    @Override
+    public List<JourneyInstance> findAll() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
     }
 
     @Override

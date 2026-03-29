@@ -44,6 +44,9 @@ class JourneyInstanceServiceIntegrationTest {
         @Mock
         private JourneyEngine journeyEngine;
 
+        @Mock
+        private TransitionHistoryService transitionHistoryService;
+
         private JourneyInstanceService journeyInstanceService;
 
         @BeforeEach
@@ -51,7 +54,8 @@ class JourneyInstanceServiceIntegrationTest {
                 journeyInstanceService = new JourneyInstanceService(
                                 journeyInstanceRepository,
                                 journeyDefinitionRepository,
-                                journeyEngine);
+                                journeyEngine,
+                                transitionHistoryService);
         }
 
         @Test

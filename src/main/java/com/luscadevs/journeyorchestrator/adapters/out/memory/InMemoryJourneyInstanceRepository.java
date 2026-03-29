@@ -1,6 +1,8 @@
 package com.luscadevs.journeyorchestrator.adapters.out.memory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,6 +24,11 @@ public class InMemoryJourneyInstanceRepository implements JourneyInstanceReposit
     @Override
     public Optional<JourneyInstance> findById(String instanceId) {
         return Optional.ofNullable(storage.get(instanceId));
+    }
+
+    @Override
+    public List<JourneyInstance> findAll() {
+        return new ArrayList<>(storage.values());
     }
 
     @Override
