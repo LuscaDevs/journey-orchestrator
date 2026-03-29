@@ -1,0 +1,972 @@
+{
+	"info": {
+		"_postman_id": "journey-orchestrator-api",
+		"name": "Journey Orchestrator API",
+		"description": "API completa para testar todos os endpoints do Journey Orchestrator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Journey Definitions",
+			"item": [
+				{
+					"name": "Create Journey Definition",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has journey definition data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('journeyCode');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData).to.have.property('version');",
+									"    pm.expect(jsonData).to.have.property('states');",
+									"    pm.expect(jsonData).to.have.property('transitions');",
+									"});",
+									"",
+									"// Salvar journeyCode para usar em outras requisições",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('journeyCode', jsonData.journeyCode);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"journeyCode\": \"customer-onboarding\",\n  \"name\": \"Customer Onboarding Journey\",\n  \"version\": 1,\n  \"states\": [\n    {\n      \"name\": \"START\",\n      \"type\": \"INITIAL\"\n    },\n    {\n      \"name\": \"PROFILE_CREATED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"DOCUMENTS_VERIFIED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"ACCOUNT_APPROVED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"COMPLETED\",\n      \"type\": \"FINAL\"\n    }\n  ],\n  \"transitions\": [\n    {\n      \"from\": \"START\",\n      \"event\": \"CREATE_PROFILE\",\n      \"target\": \"PROFILE_CREATED\"\n    },\n    {\n      \"from\": \"PROFILE_CREATED\",\n      \"event\": \"UPLOAD_DOCUMENTS\",\n      \"target\": \"DOCUMENTS_VERIFIED\"\n    },\n    {\n      \"from\": \"DOCUMENTS_VERIFIED\",\n      \"event\": \"APPROVE_ACCOUNT\",\n      \"target\": \"ACCOUNT_APPROVED\"\n    },\n    {\n      \"from\": \"ACCOUNT_APPROVED\",\n      \"event\": \"COMPLETE_ONBOARDING\",\n      \"target\": \"COMPLETED\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/journeys",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List All Journey Definitions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Each journey definition has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        jsonData.forEach(function(journey) {",
+									"            pm.expect(journey).to.have.property('journeyCode');",
+									"            pm.expect(journey).to.have.property('name');",
+									"            pm.expect(journey).to.have.property('version');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journeys",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journey Definition by Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has journey definition data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('journeyCode');",
+									"        pm.expect(jsonData[0]).to.have.property('name');",
+									"        pm.expect(jsonData[0]).to.have.property('version');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journeys/{{journeyCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys",
+								"{{journeyCode}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Journey Instances",
+			"item": [
+				{
+					"name": "Start Journey Instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has journey instance data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('journeyDefinitionId');",
+									"    pm.expect(jsonData).to.have.property('currentState');",
+									"});",
+									"",
+									"// Salvar instanceId para usar em outras requisições",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('instanceId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"journeyDefinitionId\": \"{{journeyCode}}\",\n  \"journeyVersion\": 1,\n  \"initialData\": {\n    \"customerId\": \"CUST-12345\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"John Doe\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journey Instance by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has journey instance data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('journeyDefinitionId');",
+									"    pm.expect(jsonData).to.have.property('currentState');",
+									"    pm.expect(jsonData).to.have.property('createdAt');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Event to Journey Instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has updated journey instance\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('currentState');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"event\": \"CREATE_PROFILE\",\n  \"data\": {\n    \"profileData\": {\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"phone\": \"+5511999998888\",\n      \"address\": \"Rua Exemplo, 123 - São Paulo, SP\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"events"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transition History",
+			"item": [
+				{
+					"name": "Get Complete Transition History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has transition history structure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('instanceId');",
+									"    pm.expect(jsonData).to.have.property('events');",
+									"    pm.expect(jsonData).to.have.property('totalCount');",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"});",
+									"",
+									"pm.test(\"Events array is valid\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.events).to.be.an('array');",
+									"    if (jsonData.events.length > 0) {",
+									"        jsonData.events.forEach(function(event) {",
+									"            pm.expect(event).to.have.property('id');",
+									"            pm.expect(event).to.have.property('instanceId');",
+									"            pm.expect(event).to.have.property('fromState');",
+									"            pm.expect(event).to.have.property('toState');",
+									"            pm.expect(event).to.have.property('event');",
+									"            pm.expect(event).to.have.property('timestamp');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get History with Date Range Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response respects date range filter\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var fromDate = new Date('2026-03-28T10:00:00Z');",
+									"    var toDate = new Date('2026-03-28T12:00:00Z');",
+									"    ",
+									"    if (jsonData.events.length > 0) {",
+									"        jsonData.events.forEach(function(event) {",
+									"            var eventDate = new Date(event.timestamp);",
+									"            pm.expect(eventDate.getTime()).to.be.at.least(fromDate.getTime());",
+									"            pm.expect(eventDate.getTime()).to.be.at.most(toDate.getTime());",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history?from=2026-03-28T10:00:00Z&to=2026-03-28T12:00:00Z",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "2026-03-28T10:00:00Z"
+								},
+								{
+									"key": "to",
+									"value": "2026-03-28T12:00:00Z"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get History with Event Type Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All events match the specified type\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var eventType = 'CREATE_PROFILE';",
+									"    ",
+									"    if (jsonData.events.length > 0) {",
+									"        jsonData.events.forEach(function(event) {",
+									"            pm.expect(event.event.type).to.eql(eventType);",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history?eventType=CREATE_PROFILE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "eventType",
+									"value": "CREATE_PROFILE"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get History with Pagination",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pagination parameters are respected\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.pagination.limit).to.eql(5);",
+									"    pm.expect(jsonData.pagination.offset).to.eql(0);",
+									"    pm.expect(jsonData.events.length).to.be.at.most(5);",
+									"});",
+									"",
+									"pm.test(\"Pagination info is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.pagination).to.have.property('limit');",
+									"    pm.expect(jsonData.pagination).to.have.property('offset');",
+									"    pm.expect(jsonData.pagination).to.have.property('hasNext');",
+									"    pm.expect(jsonData.pagination).to.have.property('hasPrevious');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history?limit=5&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get History with Combined Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Combined filters work correctly\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var fromDate = new Date('2026-03-28T10:00:00Z');",
+									"    var toDate = new Date('2026-03-28T12:00:00Z');",
+									"    var eventType = 'CREATE_PROFILE';",
+									"    ",
+									"    if (jsonData.events.length > 0) {",
+									"        jsonData.events.forEach(function(event) {",
+									"            var eventDate = new Date(event.timestamp);",
+									"            pm.expect(eventDate.getTime()).to.be.at.least(fromDate.getTime());",
+									"            pm.expect(eventDate.getTime()).to.be.at.most(toDate.getTime());",
+									"            pm.expect(event.event.type).to.eql(eventType);",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history?from=2026-03-28T10:00:00Z&to=2026-03-28T12:00:00Z&eventType=CREATE_PROFILE&limit=10&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journey-instances",
+								"{{instanceId}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "2026-03-28T10:00:00Z"
+								},
+								{
+									"key": "to",
+									"value": "2026-03-28T12:00:00Z"
+								},
+								{
+									"key": "eventType",
+									"value": "CREATE_PROFILE"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workflow Examples",
+			"item": [
+				{
+					"name": "Complete Onboarding Workflow",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Limpar variáveis anteriores",
+									"pm.collectionVariables.unset('instanceId');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"item": [
+						{
+							"name": "1. Create Journey Definition",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"journeyCode\": \"customer-onboarding\",\n  \"name\": \"Customer Onboarding Journey\",\n  \"version\": 1,\n  \"states\": [\n    {\n      \"name\": \"START\",\n      \"type\": \"INITIAL\"\n    },\n    {\n      \"name\": \"PROFILE_CREATED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"DOCUMENTS_VERIFIED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"ACCOUNT_APPROVED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"COMPLETED\",\n      \"type\": \"FINAL\"\n    }\n  ],\n  \"transitions\": [\n    {\n      \"from\": \"START\",\n      \"event\": \"CREATE_PROFILE\",\n      \"target\": \"PROFILE_CREATED\"\n    },\n    {\n      \"from\": \"PROFILE_CREATED\",\n      \"event\": \"UPLOAD_DOCUMENTS\",\n      \"target\": \"DOCUMENTS_VERIFIED\"\n    },\n    {\n      \"from\": \"DOCUMENTS_VERIFIED\",\n      \"event\": \"APPROVE_ACCOUNT\",\n      \"target\": \"ACCOUNT_APPROVED\"\n    },\n    {\n      \"from\": \"ACCOUNT_APPROVED\",\n      \"event\": \"COMPLETE_ONBOARDING\",\n      \"target\": \"COMPLETED\"\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journeys",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journeys"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Start Journey Instance",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"// Salvar instanceId",
+											"if (pm.response.code === 201) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('instanceId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"journeyDefinitionId\": \"customer-onboarding\",\n  \"journeyVersion\": 1,\n  \"initialData\": {\n    \"customerId\": \"CUST-12345\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"John Doe\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Send CREATE_PROFILE Event",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"State changed to PROFILE_CREATED\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.currentState.name).to.eql('PROFILE_CREATED');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"event\": \"CREATE_PROFILE\",\n  \"data\": {\n    \"profileData\": {\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"phone\": \"+5511999998888\",\n      \"address\": \"Rua Exemplo, 123 - São Paulo, SP\"\n    }\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances",
+										"{{instanceId}}",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Send UPLOAD_DOCUMENTS Event",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"State changed to DOCUMENTS_VERIFIED\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.currentState.name).to.eql('DOCUMENTS_VERIFIED');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"event\": \"UPLOAD_DOCUMENTS\",\n  \"data\": {\n    \"documents\": {\n      \"rg\": \"RG-123456789\",\n      \"cpf\": \"CPF-987654321\",\n      \"proofOfAddress\": \"ADDR-456789123\"\n    }\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances",
+										"{{instanceId}}",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Send APPROVE_ACCOUNT Event",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"State changed to ACCOUNT_APPROVED\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.currentState.name).to.eql('ACCOUNT_APPROVED');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"event\": \"APPROVE_ACCOUNT\",\n  \"data\": {\n    \"approvalData\": {\n      \"approvedBy\": \"system\",\n      \"approvedAt\": \"2026-03-28T11:00:00Z\",\n      \"riskScore\": \"LOW\"\n    }\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances",
+										"{{instanceId}}",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Send COMPLETE_ONBOARDING Event",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"State changed to COMPLETED\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.currentState.name).to.eql('COMPLETED');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"event\": \"COMPLETE_ONBOARDING\",\n  \"data\": {\n    \"completionData\": {\n      \"accountNumber\": \"ACC-123456789\",\n      \"welcomeEmailSent\": true,\n      \"completedAt\": \"2026-03-28T11:30:00Z\"\n    }\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances",
+										"{{instanceId}}",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "7. View Complete Transition History",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"History contains all transitions\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.events.length).to.be.at.least(5);",
+											"    ",
+											"    var expectedStates = ['START', 'PROFILE_CREATED', 'DOCUMENTS_VERIFIED', 'ACCOUNT_APPROVED', 'COMPLETED'];",
+											"    var actualStates = jsonData.events.map(e => e.toState);",
+											"    ",
+											"    expectedStates.forEach(function(state) {",
+											"        pm.expect(actualStates).to.include(state);",
+											"    });",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/journey-instances/{{instanceId}}/history",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"journey-instances",
+										"{{instanceId}}",
+										"history"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Configurar variáveis globais se não existirem",
+					"if (!pm.collectionVariables.get('baseUrl')) {",
+					"    pm.collectionVariables.set('baseUrl', 'http://localhost:8080');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Testes globais para todas as requisições",
+					"pm.test(\"Response time is less than 2000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"pm.test(\"Response has Content-Type header\", function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "journeyCode",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "instanceId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

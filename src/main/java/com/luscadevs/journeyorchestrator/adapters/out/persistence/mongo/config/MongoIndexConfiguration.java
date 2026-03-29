@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -11,6 +12,7 @@ import jakarta.annotation.PostConstruct;
  * MongoDB index configuration for optimal query performance.
  */
 @Configuration
+@Slf4j
 public class MongoIndexConfiguration {
 
         private final MongoTemplate mongoTemplate;
@@ -176,10 +178,15 @@ public class MongoIndexConfiguration {
                                                 .named("idx_state_transition"));
 
                 // TTL index for events (optional - 90 days)
-                mongoTemplate.indexOps("journey_events")
-                                .ensureIndex(new Index()
-                                                .on("timestamp", Sort.Direction.ASC)
-                                                .named("idx_timestamp_ttl")
-                                                .expire(90 * 24 * 60 * 60)); // 90 days in seconds
+                try {
+                        mongoTemplate.indexOps("journey_events")
+                                        .ensureIndex(new Index()
+                                                        .on("timestamp", Sort.Direction.ASC)
+                                                        .named("idx_timestamp_ttl")
+                                                        .expire(90 * 24 * 60 * 60)); // 90 days in seconds
+                } catch (Exception e) {
+                        log.warn("Could not create TTL index for journey_events, it may already exist: {}",
+                                        e.getMessage());
+                }
         }
 }

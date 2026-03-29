@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyInstanceRepositoryPort;
@@ -20,6 +21,11 @@ public class JourneyInstancePersistenceAdapter implements JourneyInstanceReposit
     @Override
     public Optional<JourneyInstance> findById(String instanceId) {
         return mongoRepository.findById(instanceId);
+    }
+
+    @Override
+    public List<JourneyInstance> findAll() {
+        return mongoRepository.findAll();
     }
 
     @Override

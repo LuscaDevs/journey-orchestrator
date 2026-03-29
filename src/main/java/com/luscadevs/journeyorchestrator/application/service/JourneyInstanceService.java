@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.application.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -17,18 +18,15 @@ import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
 import com.luscadevs.journey.api.generated.model.JourneyStatus;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class JourneyInstanceService {
     private final JourneyInstanceRepositoryPort journeyInstanceRepository;
     private final JourneyDefinitionRepositoryPort journeyDefinitionRepository;
     private final JourneyEngine journeyEngine;
-
-    public JourneyInstanceService(JourneyInstanceRepositoryPort journeyInstanceRepository,
-            JourneyDefinitionRepositoryPort journeyDefinitionRepository, JourneyEngine journeyEngine) {
-        this.journeyInstanceRepository = journeyInstanceRepository;
-        this.journeyDefinitionRepository = journeyDefinitionRepository;
-        this.journeyEngine = journeyEngine;
-    }
+    private final TransitionHistoryService transitionHistoryService;
 
     public JourneyInstance startJourney(String journeyCode, Integer version, Map<String, Object> context) {
         JourneyDefinition definition = journeyDefinitionRepository.findByJourneyCodeAndVersion(journeyCode, version)
@@ -49,7 +47,23 @@ public class JourneyInstanceService {
 
         JourneyInstance instance = JourneyInstance.start(journeyCode, version, initialState, context);
 
-        return journeyInstanceRepository.save(instance);
+        // Record the initial state as a transition history event
+        Event startEvent = Event.builder()
+                .name("JOURNEY_STARTED")
+                .description("Journey instance started")
+                .build();
+
+        JourneyInstance savedInstance = journeyInstanceRepository.save(instance);
+
+        // Record transition history after saving the instance
+        transitionHistoryService.recordTransition(
+                savedInstance.getId(),
+                null,
+                initialState,
+                startEvent,
+                Map.of("journeyCode", journeyCode, "version", version));
+
+        return savedInstance;
     }
 
     public JourneyInstance applyEvent(String instanceId, Event event) {
@@ -66,6 +80,8 @@ public class JourneyInstanceService {
                 .orElseThrow(() -> new JourneyDefinitionNotFoundException(
                         instance.getJourneyDefinitionId() + ":" + instance.getJourneyVersion()));
 
+        State previousState = instance.getCurrentState();
+
         try {
             journeyEngine.applyEvent(instance, definition, event);
         } catch (Exception e) {
@@ -78,12 +94,29 @@ public class JourneyInstanceService {
             throw e;
         }
 
-        return journeyInstanceRepository.save(instance);
+        JourneyInstance savedInstance = journeyInstanceRepository.save(instance);
+
+        // Record transition history after successful state change
+        State newState = savedInstance.getCurrentState();
+        if (!previousState.equals(newState)) {
+            transitionHistoryService.recordTransition(
+                    instanceId,
+                    previousState,
+                    newState,
+                    event,
+                    Map.of("journeyCode", instance.getJourneyDefinitionId(), "version", instance.getJourneyVersion()));
+        }
+
+        return savedInstance;
     }
 
     public JourneyInstance getInstance(String instanceId) {
         return journeyInstanceRepository.findById(instanceId)
                 .orElseThrow(() -> new JourneyInstanceNotFoundException(instanceId));
+    }
+
+    public List<JourneyInstance> getAllInstances() {
+        return journeyInstanceRepository.findAll();
     }
 
 }

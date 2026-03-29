@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -40,6 +41,14 @@ public class JourneyInstanceRepositoryImpl implements JourneyInstanceRepositoryP
     public Optional<JourneyInstance> findById(String instanceId) {
         return mongoJourneyInstanceRepository.findById(instanceId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<JourneyInstance> findAll() {
+        return mongoJourneyInstanceRepository.findAll()
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
