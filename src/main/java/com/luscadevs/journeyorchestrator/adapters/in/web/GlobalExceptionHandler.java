@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.in.web;
 
+import com.luscadevs.journeyorchestrator.adapters.observability.enhancer.MDCErrorEnhancer;
 import com.luscadevs.journeyorchestrator.domain.exception.DomainException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlreadyExistsException;
@@ -28,6 +29,12 @@ public class GlobalExceptionHandler {
 
         private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
         private static final String CORRELATION_ID_MDC_KEY = "correlationId";
+
+        private final MDCErrorEnhancer mdcErrorEnhancer;
+
+        public GlobalExceptionHandler(MDCErrorEnhancer mdcErrorEnhancer) {
+                this.mdcErrorEnhancer = mdcErrorEnhancer;
+        }
 
         /**
          * Handles all domain exceptions and converts them to RFC 9457-compliant responses.
@@ -278,16 +285,15 @@ public class GlobalExceptionHandler {
                 MDC.put("requestPath", request.getRequestURI());
                 MDC.put("httpMethod", request.getMethod());
 
-                if (ex != null) {
-                        MDC.put("errorCode", ex.getErrorCode().getCode());
-                        MDC.put("exceptionType", ex.getClass().getSimpleName());
-                }
+                // Use MDCErrorEnhancer to add error information
+                mdcErrorEnhancer.enhanceMDCWithError(ex);
         }
 
         /**
          * Clears logging context to prevent memory leaks.
          */
         private void clearLoggingContext() {
+                mdcErrorEnhancer.clearErrorMDC();
                 MDC.remove("correlationId");
                 MDC.remove("requestPath");
                 MDC.remove("httpMethod");

@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.in.web;
 
+import com.luscadevs.journeyorchestrator.adapters.observability.enhancer.MDCErrorEnhancer;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,18 +15,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Integration tests for validation error logging functionality.
- * Verifies that validation errors are properly logged with correlation IDs and
- * context.
+ * Integration tests for validation error logging functionality. Verifies that validation errors are
+ * properly logged with correlation IDs and context.
  */
 class ValidationErrorLoggingTest {
 
     private GlobalExceptionHandler exceptionHandler;
     private HttpServletRequest mockRequest;
+    private MDCErrorEnhancer mockMdcErrorEnhancer;
 
     @BeforeEach
     void setUp() {
-        exceptionHandler = new GlobalExceptionHandler();
+        mockMdcErrorEnhancer = mock(MDCErrorEnhancer.class);
+        exceptionHandler = new GlobalExceptionHandler(mockMdcErrorEnhancer);
         mockRequest = mock(HttpServletRequest.class);
         when(mockRequest.getRequestURI()).thenReturn("/api/journeys");
         when(mockRequest.getMethod()).thenReturn("POST");
@@ -38,9 +40,8 @@ class ValidationErrorLoggingTest {
     @Test
     void shouldLogValidationErrorsWithCorrelationId() {
         // Given
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "name", "must not be empty",
-                "description", "must be at least 10 characters");
+        MethodArgumentNotValidException validationException = createMockValidationException("name",
+                "must not be empty", "description", "must be at least 10 characters");
 
         // When
         var response = exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -61,8 +62,8 @@ class ValidationErrorLoggingTest {
         String correlationId = "test-correlation-123";
         when(mockRequest.getHeader("X-Correlation-ID")).thenReturn(correlationId);
 
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "field1", "error message 1");
+        MethodArgumentNotValidException validationException =
+                createMockValidationException("field1", "error message 1");
 
         // When
         var response = exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -79,9 +80,7 @@ class ValidationErrorLoggingTest {
     void shouldHandleMultipleValidationErrors() {
         // Given
         MethodArgumentNotValidException validationException = createMockValidationException(
-                "field1", "error1",
-                "field2", "error2",
-                "field3", "error3");
+                "field1", "error1", "field2", "error2", "field3", "error3");
 
         // When
         var response = exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -100,8 +99,8 @@ class ValidationErrorLoggingTest {
     @Test
     void shouldSetCorrectMdcContextForValidationErrors() {
         // Given
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "testField", "test error");
+        MethodArgumentNotValidException validationException =
+                createMockValidationException("testField", "test error");
 
         // When
         exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -138,8 +137,8 @@ class ValidationErrorLoggingTest {
         String requestPath = "/api/journeys/definitions";
         when(mockRequest.getRequestURI()).thenReturn(requestPath);
 
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "name", "required field");
+        MethodArgumentNotValidException validationException =
+                createMockValidationException("name", "required field");
 
         // When
         exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -154,8 +153,8 @@ class ValidationErrorLoggingTest {
         String httpMethod = "PUT";
         when(mockRequest.getMethod()).thenReturn(httpMethod);
 
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "status", "invalid value");
+        MethodArgumentNotValidException validationException =
+                createMockValidationException("status", "invalid value");
 
         // When
         exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -169,23 +168,26 @@ class ValidationErrorLoggingTest {
         // Given
         when(mockRequest.getHeader("X-Correlation-ID")).thenReturn(null);
 
-        MethodArgumentNotValidException validationException = createMockValidationException(
-                "test", "error");
+        MethodArgumentNotValidException validationException =
+                createMockValidationException("test", "error");
 
         // When & Then
-        assertDoesNotThrow(() -> exceptionHandler.handleValidationException(validationException, mockRequest));
+        assertDoesNotThrow(
+                () -> exceptionHandler.handleValidationException(validationException, mockRequest));
     }
 
     @Test
     void shouldHandleValidationErrorWithNullRejectedValue() {
         // Given
         BindingResult bindingResult = mock(BindingResult.class);
-        FieldError fieldError = new FieldError("object", "field", null, false, null, null, "must not be null");
+        FieldError fieldError =
+                new FieldError("object", "field", null, false, null, null, "must not be null");
 
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
         when(bindingResult.getFieldErrorCount()).thenReturn(1);
 
-        MethodArgumentNotValidException validationException = new MethodArgumentNotValidException(null, bindingResult);
+        MethodArgumentNotValidException validationException =
+                new MethodArgumentNotValidException(null, bindingResult);
 
         // When
         var response = exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -199,12 +201,14 @@ class ValidationErrorLoggingTest {
     void shouldHandleValidationErrorWithEmptyRejectedValue() {
         // Given
         BindingResult bindingResult = mock(BindingResult.class);
-        FieldError fieldError = new FieldError("object", "field", "", false, null, null, "must not be empty");
+        FieldError fieldError =
+                new FieldError("object", "field", "", false, null, null, "must not be empty");
 
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
         when(bindingResult.getFieldErrorCount()).thenReturn(1);
 
-        MethodArgumentNotValidException validationException = new MethodArgumentNotValidException(null, bindingResult);
+        MethodArgumentNotValidException validationException =
+                new MethodArgumentNotValidException(null, bindingResult);
 
         // When
         var response = exceptionHandler.handleValidationException(validationException, mockRequest);
@@ -215,16 +219,15 @@ class ValidationErrorLoggingTest {
     }
 
     /**
-     * Helper method to create a mock MethodArgumentNotValidException with field
-     * errors.
+     * Helper method to create a mock MethodArgumentNotValidException with field errors.
      */
     private MethodArgumentNotValidException createMockValidationException(String... fieldErrors) {
         BindingResult bindingResult = mock(BindingResult.class);
 
         // Create field errors from the varargs parameter
         List<FieldError> errors = java.util.stream.IntStream.range(0, fieldErrors.length / 2)
-                .mapToObj(i -> new FieldError("object", fieldErrors[i * 2], "rejectedValue", false, null, null,
-                        fieldErrors[i * 2 + 1]))
+                .mapToObj(i -> new FieldError("object", fieldErrors[i * 2], "rejectedValue", false,
+                        null, null, fieldErrors[i * 2 + 1]))
                 .toList();
 
         when(bindingResult.getFieldErrors()).thenReturn(errors);
