@@ -27,6 +27,20 @@ spring:
       database: journey-orchestrator
       auto-index-creation: true
 
+# Observability Configuration
+observability:
+  logging:
+    enabled: true
+    excluded-methods:
+      - toString
+      - hashCode
+      - equals
+    excluded-packages:
+      - java.lang.Object
+      - java.lang.String
+    slow-operation-threshold: 1000  # milliseconds
+    log-parameters: false  # Always false for security
+
 # Application-specific configuration
 journey-orchestrator:
   persistence:
@@ -42,10 +56,9 @@ logging:
   level:
     root: INFO
     com.luscadevs.journeyorchestrator: DEBUG
-
+    com.luscadevs.journeyorchestrator.adapters.observability: INFO
     org.springframework: INFO
     org.springframework.web: INFO
-
     org.springframework.data.mongodb: WARN
     org.springframework.data.mongodb.core: WARN
     org.springframework.data.mongodb.repository: WARN

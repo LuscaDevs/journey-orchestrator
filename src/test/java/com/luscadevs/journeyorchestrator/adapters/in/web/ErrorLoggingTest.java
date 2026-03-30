@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.in.web;
 
+import com.luscadevs.journeyorchestrator.adapters.observability.enhancer.MDCErrorEnhancer;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidStateTransitionException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,10 +23,12 @@ class ErrorLoggingTest {
 
     private GlobalExceptionHandler exceptionHandler;
     private HttpServletRequest mockRequest;
+    private MDCErrorEnhancer mockMdcErrorEnhancer;
 
     @BeforeEach
     void setUp() {
-        exceptionHandler = new GlobalExceptionHandler();
+        mockMdcErrorEnhancer = mock(MDCErrorEnhancer.class);
+        exceptionHandler = new GlobalExceptionHandler(mockMdcErrorEnhancer);
         mockRequest = mock(HttpServletRequest.class);
         when(mockRequest.getRequestURI()).thenReturn("/api/test");
         when(mockRequest.getMethod()).thenReturn("GET");

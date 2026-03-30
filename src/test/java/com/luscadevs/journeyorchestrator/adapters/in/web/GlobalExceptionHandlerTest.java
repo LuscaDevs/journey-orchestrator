@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.in.web;
 
+import com.luscadevs.journeyorchestrator.adapters.observability.enhancer.MDCErrorEnhancer;
 import com.luscadevs.journeyorchestrator.domain.exception.DomainException;
 import com.luscadevs.journeyorchestrator.domain.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
@@ -11,17 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for GlobalExceptionHandler to ensure proper RFC 9457 compliance
- * and correct HTTP status mapping for domain exceptions.
+ * Unit tests for GlobalExceptionHandler to ensure proper RFC 9457 compliance and correct HTTP
+ * status mapping for domain exceptions.
  */
 class GlobalExceptionHandlerTest {
 
     private GlobalExceptionHandler exceptionHandler;
     private HttpServletRequest mockRequest;
+    private MDCErrorEnhancer mockMdcErrorEnhancer;
 
     @BeforeEach
     void setUp() {
-        exceptionHandler = new GlobalExceptionHandler();
+        mockMdcErrorEnhancer = mock(MDCErrorEnhancer.class);
+        exceptionHandler = new GlobalExceptionHandler(mockMdcErrorEnhancer);
         mockRequest = mock(HttpServletRequest.class);
         when(mockRequest.getRequestURI()).thenReturn("/api/test");
     }
@@ -29,10 +32,12 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldHandleDomainExceptionAndReturnProblemDetail() {
         // Given
-        DomainException testException = new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Test message");
+        DomainException testException =
+                new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Test message");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(testException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(testException, mockRequest);
 
         // Then
         assertNotNull(response);
@@ -46,11 +51,12 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldMapNotFoundErrorsTo404() {
         // Given
-        DomainException notFoundException = new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND,
-                "Not found");
+        DomainException notFoundException =
+                new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Not found");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(notFoundException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(notFoundException, mockRequest);
 
         // Then
         assertEquals(404, response.getProblemDetail().getStatus());
@@ -60,10 +66,12 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldMapValidationErrorTo400() {
         // Given
-        DomainException validationException = new TestDomainException(ErrorCode.VALIDATION_FAILED, "Validation failed");
+        DomainException validationException =
+                new TestDomainException(ErrorCode.VALIDATION_FAILED, "Validation failed");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(validationException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(validationException, mockRequest);
 
         // Then
         assertEquals(400, response.getProblemDetail().getStatus());
@@ -73,10 +81,12 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldMapConflictErrorsTo409() {
         // Given
-        DomainException conflictException = new TestDomainException(ErrorCode.CONCURRENT_MODIFICATION, "Conflict");
+        DomainException conflictException =
+                new TestDomainException(ErrorCode.CONCURRENT_MODIFICATION, "Conflict");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(conflictException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(conflictException, mockRequest);
 
         // Then
         assertEquals(409, response.getProblemDetail().getStatus());
@@ -86,12 +96,14 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldIncludeErrorContext() {
         // Given
-        DomainException contextException = new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Not found")
-                .withContext("journeyDefinitionId", "test-123")
-                .withContext("userId", "user-456");
+        DomainException contextException =
+                new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Not found")
+                        .withContext("journeyDefinitionId", "test-123")
+                        .withContext("userId", "user-456");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(contextException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(contextException, mockRequest);
 
         // Then
         Map<String, Object> context = response.getAdditionalContext();
@@ -103,10 +115,12 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldCreateValidProblemDetailStructure() {
         // Given
-        DomainException testException = new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Test message");
+        DomainException testException =
+                new TestDomainException(ErrorCode.JOURNEY_DEFINITION_NOT_FOUND, "Test message");
 
         // When
-        ErrorResponseProblemDetail response = ErrorResponseProblemDetail.from(testException, mockRequest);
+        ErrorResponseProblemDetail response =
+                ErrorResponseProblemDetail.from(testException, mockRequest);
 
         // Then - Verify RFC 9457 compliance
         assertNotNull(response.getProblemDetail().getType());
