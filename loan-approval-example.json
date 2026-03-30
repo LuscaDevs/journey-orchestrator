@@ -1,0 +1,141 @@
+{
+  "info": {
+    "_postman_id": "loan-approval-example",
+    "name": "Loan Approval Journey with Conditions",
+    "description": "Example of journey with conditional transitions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Loan Approval Journey",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"journeyCode\": \"loan-approval\",\n  \"name\": \"Loan Approval Journey with Conditions\",\n  \"version\": 1,\n  \"states\": [\n    {\n      \"name\": \"START\",\n      \"type\": \"INITIAL\"\n    },\n    {\n      \"name\": \"DOCUMENTS_PENDING\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"DOCUMENTS_VERIFIED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"MANUAL_REVIEW\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"APPROVED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"REJECTED\",\n      \"type\": \"INTERMEDIATE\"\n    },\n    {\n      \"name\": \"COMPLETED\",\n      \"type\": \"FINAL\"\n    }\n  ],\n  \"transitions\": [\n    {\n      \"source\": \"START\",\n      \"event\": \"SUBMIT_APPLICATION\",\n      \"target\": \"DOCUMENTS_PENDING\"\n    },\n    {\n      \"source\": \"DOCUMENTS_PENDING\",\n      \"event\": \"UPLOAD_DOCUMENTS\",\n      \"target\": \"DOCUMENTS_VERIFIED\"\n    },\n    {\n      \"source\": \"DOCUMENTS_VERIFIED\",\n      \"event\": \"EVALUATE_RISK\",\n      \"target\": \"APPROVED\",\n      \"condition\": \"#eventData.riskScore <= 50 AND #eventData.income > 3000\"\n    },\n    {\n      \"source\": \"DOCUMENTS_VERIFIED\",\n      \"event\": \"EVALUATE_RISK\",\n      \"target\": \"MANUAL_REVIEW\",\n      \"condition\": \"#eventData.riskScore > 50 AND #eventData.riskScore <= 80\"\n    },\n    {\n      \"source\": \"DOCUMENTS_VERIFIED\",\n      \"event\": \"EVALUATE_RISK\",\n      \"target\": \"REJECTED\",\n      \"condition\": \"#eventData.riskScore > 80 OR #eventData.income <= 3000\"\n    },\n    {\n      \"source\": \"MANUAL_REVIEW\",\n      \"event\": \"MANUAL_APPROVAL\",\n      \"target\": \"APPROVED\"\n    },\n    {\n      \"source\": \"MANUAL_REVIEW\",\n      \"event\": \"MANUAL_REJECTION\",\n      \"target\": \"REJECTED\"\n    },\n    {\n      \"source\": \"APPROVED\",\n      \"event\": \"DISBURSE_LOAN\",\n      \"target\": \"COMPLETED\"\n    },\n    {\n      \"source\": \"REJECTED\",\n      \"event\": \"NOTIFY_REJECTION\",\n      \"target\": \"COMPLETED\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/journeys",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "journeys"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Start Journey Instance",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"journeyDefinitionId\": \"loan-approval\",\n  \"journeyVersion\": 1,\n  \"initialData\": {\n    \"customerId\": \"CUST-12345\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"John Doe\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/journey-instances",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "journey-instances"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Test Low Risk - Should Approve",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"EVALUATE_RISK\",\n  \"data\": {\n    \"riskScore\": 30,\n    \"income\": 5000,\n    \"loanAmount\": 10000,\n    \"creditScore\": 750\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "journey-instances",
+            "{{instanceId}}",
+            "events"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Test Medium Risk - Should Go to Manual Review",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"EVALUATE_RISK\",\n  \"data\": {\n    \"riskScore\": 60,\n    \"income\": 4000,\n    \"loanAmount\": 15000,\n    \"creditScore\": 650\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "journey-instances",
+            "{{instanceId}}",
+            "events"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Test High Risk - Should Reject",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"EVALUATE_RISK\",\n  \"data\": {\n    \"riskScore\": 90,\n    \"income\": 2000,\n    \"loanAmount\": 20000,\n    \"creditScore\": 500\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/journey-instances/{{instanceId}}/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "journey-instances",
+            "{{instanceId}}",
+            "events"
+          ]
+        }
+      }
+    }
+  ]
+}

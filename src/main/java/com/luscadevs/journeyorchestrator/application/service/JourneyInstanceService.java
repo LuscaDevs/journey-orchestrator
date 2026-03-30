@@ -28,45 +28,42 @@ public class JourneyInstanceService {
     private final JourneyEngine journeyEngine;
     private final TransitionHistoryService transitionHistoryService;
 
-    public JourneyInstance startJourney(String journeyCode, Integer version, Map<String, Object> context) {
-        JourneyDefinition definition = journeyDefinitionRepository.findByJourneyCodeAndVersion(journeyCode, version)
-                .orElseThrow(() -> new JourneyDefinitionNotFoundException(
-                        journeyCode + ":" + version));
+    public JourneyInstance startJourney(String journeyCode, Integer version,
+            Map<String, Object> context) {
+        JourneyDefinition definition = journeyDefinitionRepository
+                .findByJourneyCodeAndVersion(journeyCode, version).orElseThrow(
+                        () -> new JourneyDefinitionNotFoundException(journeyCode + ":" + version));
 
         // Check if initial state is set, if not, use the first state from the
         // definition
         State initialState = definition.getInitialState();
-        if (initialState == null && definition.getStates() != null && !definition.getStates().isEmpty()) {
+        if (initialState == null && definition.getStates() != null
+                && !definition.getStates().isEmpty()) {
             initialState = definition.getStates().get(0);
         }
 
         if (initialState == null) {
-            throw new IllegalStateException("Journey definition '" + journeyCode + "' version " + version +
-                    " has no initial state defined and no states available");
+            throw new IllegalStateException("Journey definition '" + journeyCode + "' version "
+                    + version + " has no initial state defined and no states available");
         }
 
-        JourneyInstance instance = JourneyInstance.start(journeyCode, version, initialState, context);
+        JourneyInstance instance =
+                JourneyInstance.start(journeyCode, version, initialState, context);
 
         // Record the initial state as a transition history event
-        Event startEvent = Event.builder()
-                .name("JOURNEY_STARTED")
-                .description("Journey instance started")
-                .build();
+        Event startEvent = Event.builder().name("JOURNEY_STARTED")
+                .description("Journey instance started").build();
 
         JourneyInstance savedInstance = journeyInstanceRepository.save(instance);
 
         // Record transition history after saving the instance
-        transitionHistoryService.recordTransition(
-                savedInstance.getId(),
-                null,
-                initialState,
-                startEvent,
-                Map.of("journeyCode", journeyCode, "version", version));
+        transitionHistoryService.recordTransition(savedInstance.getId(), null, initialState,
+                startEvent, Map.of("journeyCode", journeyCode, "version", version));
 
         return savedInstance;
     }
 
-    public JourneyInstance applyEvent(String instanceId, Event event) {
+    public JourneyInstance applyEvent(String instanceId, Event event, Object eventData) {
         JourneyInstance instance = journeyInstanceRepository.findById(instanceId)
                 .orElseThrow(() -> new JourneyInstanceNotFoundException(instanceId));
 
@@ -76,20 +73,30 @@ public class JourneyInstanceService {
         }
 
         JourneyDefinition definition = journeyDefinitionRepository
-                .findByJourneyCodeAndVersion(instance.getJourneyDefinitionId(), instance.getJourneyVersion())
+                .findByJourneyCodeAndVersion(instance.getJourneyDefinitionId(),
+                        instance.getJourneyVersion())
                 .orElseThrow(() -> new JourneyDefinitionNotFoundException(
                         instance.getJourneyDefinitionId() + ":" + instance.getJourneyVersion()));
 
         State previousState = instance.getCurrentState();
 
         try {
-            journeyEngine.applyEvent(instance, definition, event);
+            journeyEngine.applyEvent(instance, definition, event, eventData);
         } catch (Exception e) {
             // Wrap engine exceptions in our domain exception
-            if (e.getMessage() != null && e.getMessage().contains("not allowed in state")) {
-                String currentState = instance.getCurrentState() != null ? instance.getCurrentState().getName()
-                        : "UNKNOWN";
-                throw new InvalidStateTransitionException(instanceId, currentState, event.getName());
+            if (e.getMessage() != null) {
+                String currentState =
+                        instance.getCurrentState() != null ? instance.getCurrentState().getName()
+                                : "UNKNOWN";
+
+                if (e.getMessage().contains("not allowed in state")) {
+                    throw new InvalidStateTransitionException(instanceId, currentState,
+                            event.getName());
+                } else if (e.getMessage().contains("conditions not met")) {
+                    // Criar exceção específica para condições não atendidas
+                    throw new InvalidStateTransitionException(instanceId, currentState,
+                            event.getName() + " (conditions not met)");
+                }
             }
             throw e;
         }
@@ -99,12 +106,9 @@ public class JourneyInstanceService {
         // Record transition history after successful state change
         State newState = savedInstance.getCurrentState();
         if (!previousState.equals(newState)) {
-            transitionHistoryService.recordTransition(
-                    instanceId,
-                    previousState,
-                    newState,
-                    event,
-                    Map.of("journeyCode", instance.getJourneyDefinitionId(), "version", instance.getJourneyVersion()));
+            transitionHistoryService.recordTransition(instanceId, previousState, newState, event,
+                    Map.of("journeyCode", instance.getJourneyDefinitionId(), "version",
+                            instance.getJourneyVersion()));
         }
 
         return savedInstance;

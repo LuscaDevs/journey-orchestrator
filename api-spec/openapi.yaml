@@ -285,7 +285,7 @@ components:
       type: string
       enum:
         - INITIAL
-        - NORMAL
+        - INTERMEDIATE
         - FINAL
 
     TransitionRequest:
@@ -301,6 +301,10 @@ components:
           type: string
         target:
           type: string
+        condition:
+          type: string
+          description: Optional SpEL expression for conditional transitions
+          example: "#eventData.amount > 1000 AND #eventData.priority == 'HIGH'"
 
     TransitionResponse:
       type: object
@@ -311,6 +315,10 @@ components:
           type: string
         target:
           type: string
+        condition:
+          type: string
+          description: Optional SpEL expression for conditional transitions
+          example: "#eventData.amount > 1000 AND #eventData.priority == 'HIGH'"
 
     CreateJourneyInstanceRequest:
       type: object

@@ -7,6 +7,7 @@ import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlrea
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyInstanceNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidStateTransitionException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyAlreadyCompletedException;
+import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -79,9 +80,13 @@ public class GlobalExceptionHandler {
                 String correlationId = getOrCreateCorrelationId(request);
                 setupLoggingContext(correlationId, null, request);
 
-                log.warn("Validation failed for request {}: {} field errors | CorrelationId: {}",
+                log.warn("Validation failed for request {}: {} field errors | CorrelationId: {} | Fields: {}",
                                 request.getRequestURI(),
-                                ex.getBindingResult().getFieldErrors().size(), correlationId);
+                                ex.getBindingResult().getFieldErrors().size(), correlationId,
+                                ex.getBindingResult().getFieldErrors().stream()
+                                                .map(error -> error.getField() + ": "
+                                                                + error.getDefaultMessage())
+                                                .toList());
 
                 ValidationErrorResponse errorResponse = ValidationErrorResponse.from(ex, request);
 
@@ -224,6 +229,33 @@ public class GlobalExceptionHandler {
                 clearLoggingContext();
 
                 return ResponseEntity.status(HttpStatus.valueOf(422))
+                                .body(errorResponse.getProblemDetail());
+        }
+
+        /**
+         * Handles InvalidConditionSyntaxException with specific logging.
+         * 
+         * @param ex The exception that occurred
+         * @param request The HTTP request for context
+         * @return ResponseEntity with ProblemDetail and HTTP 400 status
+         */
+        @ExceptionHandler(InvalidConditionSyntaxException.class)
+        public ResponseEntity<ProblemDetail> handleInvalidConditionSyntaxException(
+                        InvalidConditionSyntaxException ex, HttpServletRequest request) {
+
+                String correlationId = getOrCreateCorrelationId(request);
+                setupLoggingContext(correlationId, ex, request);
+
+                log.warn("Invalid condition syntax detected: '{}' | Path: {} | Context: {} | CorrelationId: {}",
+                                ex.getCondition(), request.getRequestURI(),
+                                sanitizeContext(ex.getContext()), correlationId);
+
+                ErrorResponseProblemDetail errorResponse =
+                                ErrorResponseProblemDetail.from(ex, request);
+
+                clearLoggingContext();
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(errorResponse.getProblemDetail());
         }
 
