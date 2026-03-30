@@ -41,6 +41,77 @@ src/main/java/com/luscadevs/journeyorchestrator/
 
 ## Coding Standards
 
+## Observability and Logging Standards
+
+The system must provide consistent and structured logging to ensure observability, traceability, and operational debugging.
+
+### Logging Framework
+
+- Logging MUST use SLF4J with Logback.
+- Log formatting and appenders MUST be configured through `logback-spring.xml`.
+- Log levels MUST be configurable via `application.yml`.
+
+### Correlation and Context
+
+All logs generated during a request MUST include the following MDC fields:
+
+- `correlationId`: Unique identifier for the request lifecycle
+- `httpMethod`: HTTP method of the request
+- `requestPath`: Requested API path
+- `errorCode`: Domain error code when applicable
+
+A request filter MUST populate these fields at the beginning of each request.
+
+### Execution Logging
+
+The system SHOULD provide automatic execution logging for important execution boundaries such as:
+
+- REST controllers
+- application services
+
+Execution logs SHOULD capture:
+
+- method start
+- method completion
+- execution duration
+- error cases
+
+### Sensitive Data Protection
+
+Logs MUST NOT expose sensitive data such as:
+
+- authentication tokens
+- passwords
+- personal identifiable information (PII)
+- secrets or credentials
+
+Logging arguments or payloads MUST be sanitized when necessary.
+
+### Logging Responsibility by Layer
+
+- **Controllers**: log request handling and high-level operations
+- **Application Services**: log orchestration and business flow
+- **Domain Layer**: SHOULD avoid logging unless strictly necessary
+- **Infrastructure**: log external interactions (database, messaging, APIs)
+
+### Log Levels
+
+Use the following guidelines:
+
+- `DEBUG`: internal diagnostics and development information
+- `INFO`: normal system operations
+- `WARN`: recoverable issues or unexpected states
+- `ERROR`: failures that prevent the expected behavior
+
+### Observability Goals
+
+Logging must enable:
+
+- request traceability using correlation IDs
+- diagnosis of production issues
+- measurement of execution latency
+- auditing of critical system operations
+
 ### Package Structure
 - Base package: `com.luscadevs.journeyorchestrator`
 - Follow hexagonal architecture with clear layer separation
@@ -118,7 +189,12 @@ src/main/java/com/luscadevs/journeyorchestrator/
 - **Domain Layer Purity**: No framework dependencies in domain
 - **Interface Segregation**: Use ports for input/output boundaries
 - **Event-Driven Transitions**: State changes triggered by external events
-- **Audit Trail**: All state transitions must be recorded
+- **Audit Trail**: All state transitions MUST be recorded. Each transition record MUST include:
+  - journeyInstanceId
+  - transitionId
+  - fromState
+  - toState
+  - timestamp
 - **Versioned Definitions**: Journey definitions support versioning
 
 ## Quality Gates

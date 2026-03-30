@@ -40,6 +40,13 @@ journey-orchestrator:
 
 logging:
   level:
-    com.luscadevs.journeyorchestrator: INFO
-    org.springdoc: DEBUG
-    org.springframework.web.servlet.DispatcherServlet: INFO
+    root: INFO
+    com.luscadevs.journeyorchestrator: DEBUG
+
+    org.springframework: INFO
+    org.springframework.web: INFO
+
+    org.springframework.data.mongodb: WARN
+    org.springframework.data.mongodb.core: WARN
+    org.springframework.data.mongodb.repository: WARN
+    org.mongodb.driver: WARN
