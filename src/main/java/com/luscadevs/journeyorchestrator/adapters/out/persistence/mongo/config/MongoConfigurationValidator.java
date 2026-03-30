@@ -1,7 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.validation.annotation.Validated;
@@ -16,12 +15,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Configuration validator for MongoDB persistence settings.
- * Ensures all required properties are properly configured and validates
- * constraints.
+ * Configuration validator for MongoDB persistence settings. Ensures all required properties are
+ * properly configured and validates constraints.
  */
 @Configuration
-@Profile({ "dev", "staging", "prod" })
+@Profile({"dev", "staging", "prod"})
 @Validated
 public class MongoConfigurationValidator {
 
@@ -51,13 +49,14 @@ public class MongoConfigurationValidator {
         validatedProps.setMinPoolSize(mongoProperties.getMinPoolSize());
         validatedProps.setAutoIndexCreation(mongoProperties.isAutoIndexCreation());
 
-        Set<ConstraintViolation<ValidatedMongoProperties>> violations = validator.validate(validatedProps);
+        Set<ConstraintViolation<ValidatedMongoProperties>> violations =
+                validator.validate(validatedProps);
 
         if (!violations.isEmpty()) {
-            String errorMessage = violations.stream()
-                    .map(ConstraintViolation::getMessage)
+            String errorMessage = violations.stream().map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", "));
-            throw new IllegalStateException("MongoDB configuration validation failed: " + errorMessage);
+            throw new IllegalStateException(
+                    "MongoDB configuration validation failed: " + errorMessage);
         }
     }
 
@@ -110,11 +109,13 @@ public class MongoConfigurationValidator {
      */
     private void validateStagingSettings() {
         if (mongoProperties.getUri() == null) {
-            throw new IllegalStateException("MongoDB URI must be configured for staging environment");
+            throw new IllegalStateException(
+                    "MongoDB URI must be configured for staging environment");
         }
 
         if (mongoProperties.getConnectionTimeout() < 3000) {
-            throw new IllegalStateException("Connection timeout should be at least 3000ms for staging");
+            throw new IllegalStateException(
+                    "Connection timeout should be at least 3000ms for staging");
         }
 
         if (mongoProperties.getMaxPoolSize() < 10) {
@@ -127,11 +128,14 @@ public class MongoConfigurationValidator {
      */
     private void validateProdSettings() {
         if (mongoProperties.getUri() == null) {
-            throw new IllegalStateException("MongoDB URI must be configured for production environment");
+            throw new IllegalStateException(
+                    "MongoDB URI must be configured for production environment");
         }
 
-        if (mongoProperties.getDatabase() == null || mongoProperties.getDatabase().trim().isEmpty()) {
-            throw new IllegalStateException("Database name must be explicitly configured for production");
+        if (mongoProperties.getDatabase() == null
+                || mongoProperties.getDatabase().trim().isEmpty()) {
+            throw new IllegalStateException(
+                    "Database name must be explicitly configured for production");
         }
 
         if (mongoProperties.getDatabase().equals("journey_orchestrator_prod")) {
@@ -139,7 +143,8 @@ public class MongoConfigurationValidator {
         }
 
         if (mongoProperties.getConnectionTimeout() < 5000) {
-            throw new IllegalStateException("Connection timeout should be at least 5000ms for production");
+            throw new IllegalStateException(
+                    "Connection timeout should be at least 5000ms for production");
         }
 
         if (mongoProperties.getMaxPoolSize() < 20) {
@@ -152,7 +157,8 @@ public class MongoConfigurationValidator {
 
         // Validate URI format for production
         if (!isValidProductionUri(mongoProperties.getUri())) {
-            throw new IllegalStateException("MongoDB URI must include authentication credentials for production");
+            throw new IllegalStateException(
+                    "MongoDB URI must include authentication credentials for production");
         }
     }
 
@@ -161,7 +167,8 @@ public class MongoConfigurationValidator {
      */
     private void validateDefaultSettings() {
         if (mongoProperties.getUri() == null && mongoProperties.getDatabase() == null) {
-            throw new IllegalStateException("Either MongoDB URI or database name must be configured");
+            throw new IllegalStateException(
+                    "Either MongoDB URI or database name must be configured");
         }
     }
 
@@ -197,11 +204,9 @@ public class MongoConfigurationValidator {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         for (StackTraceElement element : stackTrace) {
             String className = element.getClassName();
-            if (className.contains("Test") ||
-                    className.contains("junit") ||
-                    className.contains("surefire") ||
-                    className.contains("maven") ||
-                    className.contains("gradle")) {
+            if (className.contains("Test") || className.contains("junit")
+                    || className.contains("surefire") || className.contains("maven")
+                    || className.contains("gradle")) {
                 return true;
             }
         }
@@ -216,8 +221,8 @@ public class MongoConfigurationValidator {
             return false;
 
         // Basic validation for authentication in URI
-        return uri.contains("://") &&
-                (uri.contains("@") || uri.contains("authSource") || uri.contains("authMechanism"));
+        return uri.contains("://") && (uri.contains("@") || uri.contains("authSource")
+                || uri.contains("authMechanism"));
     }
 
     /**

@@ -1,7 +1,5 @@
 package com.luscadevs.journeyorchestrator.domain.exception;
 
-import com.luscadevs.journeyorchestrator.domain.exception.ErrorCode;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
