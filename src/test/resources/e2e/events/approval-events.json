@@ -1,0 +1,48 @@
+{
+  "events": [
+    {
+      "event": "APPROVE",
+      "payload": {
+        "approvedBy": "agent-123",
+        "approvalAmount": 1000.0,
+        "approvalReason": "Standard approval process",
+        "timestamp": "2024-01-15T10:30:00Z",
+        "department": "LOANS",
+        "riskLevel": "LOW"
+      }
+    },
+    {
+      "event": "APPROVE",
+      "payload": {
+        "approvedBy": "manager-456",
+        "approvalAmount": 2500.0,
+        "approvalReason": "High value approval requires manager sign-off",
+        "timestamp": "2024-01-15T11:15:00Z",
+        "department": "LOANS",
+        "riskLevel": "MEDIUM"
+      }
+    },
+    {
+      "event": "APPROVE",
+      "payload": {
+        "approvedBy": "director-789",
+        "approvalAmount": 5000.0,
+        "approvalReason": "Enterprise level approval",
+        "timestamp": "2024-01-15T14:20:00Z",
+        "department": "ENTERPRISE",
+        "riskLevel": "HIGH"
+      }
+    },
+    {
+      "event": "APPROVE",
+      "payload": {
+        "approvedBy": "system-auto",
+        "approvalAmount": 250.0,
+        "approvalReason": "Automatic approval for low value",
+        "timestamp": "2024-01-15T09:45:00Z",
+        "department": "AUTO",
+        "riskLevel": "AUTO"
+      }
+    }
+  ]
+}

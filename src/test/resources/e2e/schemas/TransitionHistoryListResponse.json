@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransitionHistoryListResponse",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "type": "string",
+      "description": "ID of the journey instance"
+    },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/TransitionHistoryEventResponse" }
+    },
+    "pagination": { "$ref": "#/definitions/PaginationInfo" },
+    "totalCount": {
+      "type": "integer",
+      "description": "Total number of events in history"
+    }
+  },
+  "definitions": {
+    "TransitionHistoryEventResponse": {
+      "type": "object",
+      "required": [
+        "id",
+        "instanceId",
+        "fromState",
+        "toState",
+        "event",
+        "timestamp"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "instanceId": { "type": "string" },
+        "fromState": { "type": "string" },
+        "toState": { "type": "string" },
+        "event": { "$ref": "#/definitions/EventInfo" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metadata": { "type": "object", "additionalProperties": true },
+        "sequenceNumber": { "type": "integer" }
+      }
+    },
+    "EventInfo": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string" },
+        "data": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "PaginationInfo": {
+      "type": "object",
+      "properties": {
+        "limit": { "type": "integer" },
+        "offset": { "type": "integer" },
+        "hasNext": { "type": "boolean" },
+        "hasPrevious": { "type": "boolean" }
+      }
+    }
+  }
+}

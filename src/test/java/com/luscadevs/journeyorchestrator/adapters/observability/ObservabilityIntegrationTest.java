@@ -1,6 +1,5 @@
 package com.luscadevs.journeyorchestrator.adapters.observability;
 
-import com.luscadevs.journeyorchestrator.JourneyorchestratorApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,8 @@ class ObservabilityIntegrationTest {
     @DisplayName("Should verify observability configuration")
     void shouldVerifyObservabilityConfiguration() throws Exception {
         // This test verifies that the observability configuration is loaded correctly
-        // The configuration should be available through the application context
-        JourneyorchestratorApplication.main(new String[] {});
+        // The application context is already loaded by @SpringBootTest
+        // We can verify the configuration by checking if the application started successfully
+        mockMvc.perform(get("/api/test/hello")).andExpect(status().isOk());
     }
 }

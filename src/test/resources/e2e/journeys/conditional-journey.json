@@ -1,0 +1,47 @@
+{
+  "journeyCode": "CONDITIONAL_JOURNEY",
+  "name": "Conditional Test Journey",
+  "version": 1,
+  "description": "A journey with conditional transitions based on event data",
+  "states": {
+    "name": "START",
+    "type": "INITIAL",
+    "description": "Initial state for conditional evaluation"
+  },
+  "transitions": {
+    "source": "START",
+    "event": "PROCESS",
+    "target": "HIGH_VALUE_APPROVED",
+    "condition": "#eventData.amount > 1000",
+    "description": "High value approval path"
+  },
+  "alternativeTransitions": {
+    "transitions": [
+      {
+        "source": "START",
+        "event": "PROCESS",
+        "target": "STANDARD_APPROVED",
+        "condition": "#eventData.amount > 500 && #eventData.amount <= 1000",
+        "description": "Standard approval path"
+      },
+      {
+        "source": "START",
+        "event": "PROCESS",
+        "target": "LOW_VALUE_APPROVED",
+        "condition": "#eventData.amount <= 500",
+        "description": "Low value approval path"
+      },
+      {
+        "source": "START",
+        "event": "PROCESS",
+        "target": "CONDITION_ERROR",
+        "description": "Default path for condition evaluation errors"
+      }
+    ]
+  },
+  "endStates": {
+    "name": "HIGH_VALUE_APPROVED",
+    "type": "FINAL",
+    "description": "High value approval final state"
+  }
+}

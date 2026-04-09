@@ -18,6 +18,11 @@ This project follows modern enterprise architecture patterns:
 - **OpenAPI 3.0.3**: API specification and code generation
 - **Lombok**: Boilerplate code reduction
 - **Maven**: Build and dependency management
+- **RestAssured 5.4.0**: API testing framework for E2E testing
+- **Testcontainers 1.19.7**: Containerized test environments for E2E testing
+- **JUnit 5**: Modern testing framework with nested tests and method ordering
+- **Awaitility 4.2.0**: Asynchronous testing support for E2E scenarios
+- **JSON Schema Validator 1.0.87**: OpenAPI contract validation in tests
 
 ## Project Structure
 
@@ -157,7 +162,9 @@ Logging must enable:
 - Unit tests for domain logic
 - Integration tests for application services
 - Contract tests for API compliance
+- **End-to-End (E2E) Tests**: Comprehensive testing of complete journey workflows using RestAssured, Testcontainers, and JUnit 5
 - Use Spring Boot test annotations for integration testing
+- **E2E Test Framework**: All flow-affecting features MUST maintain functional E2E tests that validate complete user journeys
 
 ## Development Workflow
 
@@ -167,7 +174,9 @@ Logging must enable:
 4. **Implement Application**: Create services and use cases
 5. **Implement Adapters**: Create controllers and repositories
 6. **Test**: Write unit and integration tests
-7. **Validate**: Run contract tests to ensure API compliance with the OpenAPI specification
+7. **E2E Test Validation**: Create/update E2E tests to validate complete journey workflows for all flow-affecting changes
+8. **Validate**: Run contract tests to ensure API compliance with the OpenAPI specification
+9. **E2E Regression**: Run full E2E test suite to ensure no regressions in journey functionality
 
 ## Configuration Management
 
@@ -205,3 +214,7 @@ Logging must enable:
 - Services MUST depend on abstractions (ports), not concretions
 - All public APIs MUST have appropriate validation
 - **Specification-Driven Development**: API contracts MUST be defined in OpenAPI before implementation - this is MANDATORY, not optional
+- **E2E Test Compliance**: All flow-affecting features MUST pass the complete E2E test suite before merge
+- **E2E Regression Prevention**: No new feature can be merged without ensuring existing E2E tests continue to pass
+- **Performance Gate**: E2E tests must validate performance thresholds (<2 second average response time for 100+ concurrent instances)
+- **Coverage Gate**: E2E tests must achieve 95%+ coverage of critical journey workflows

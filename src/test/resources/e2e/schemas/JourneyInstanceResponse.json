@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JourneyInstanceResponse",
+  "type": "object",
+  "properties": {
+    "instanceId": { "type": "string" },
+    "journeyCode": { "type": "string" },
+    "version": { "type": "integer" },
+    "currentState": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}
