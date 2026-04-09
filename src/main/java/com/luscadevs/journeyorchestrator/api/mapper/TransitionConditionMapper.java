@@ -26,8 +26,29 @@ public class TransitionConditionMapper {
             return null;
         }
 
+        java.time.Instant now = java.time.Instant.now();
         return TransitionCondition.builder().id(java.util.UUID.randomUUID().toString())
-                .expression(request.getExpression()).build();
+                .expression(request.getExpression()).createdAt(now).updatedAt(now).build();
+    }
+
+    /**
+     * Converts a request DTO to domain entity with additional fields
+     * 
+     * @param request The request DTO
+     * @param journeyDefinitionId Journey definition ID
+     * @param transitionId Transition ID
+     * @return TransitionCondition domain entity
+     */
+    public static TransitionCondition toDomain(TransitionConditionRequest request,
+            String journeyDefinitionId, String transitionId) {
+        if (request == null) {
+            return null;
+        }
+
+        java.time.Instant now = java.time.Instant.now();
+        return TransitionCondition.builder().id(java.util.UUID.randomUUID().toString())
+                .journeyDefinitionId(journeyDefinitionId).transitionId(transitionId)
+                .expression(request.getExpression()).createdAt(now).updatedAt(now).build();
     }
 
     /**

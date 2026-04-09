@@ -4,12 +4,14 @@ import com.luscadevs.journeyorchestrator.domain.journey.TransitionCondition;
 import com.luscadevs.journeyorchestrator.api.model.TransitionConditionRequest;
 import com.luscadevs.journeyorchestrator.api.model.TransitionConditionResponse;
 import com.luscadevs.journeyorchestrator.api.mapper.TransitionConditionMapper;
+import com.luscadevs.journeyorchestrator.application.port.TransitionConditionRepositoryPort;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 /**
  * REST controller for transition condition management.
@@ -20,6 +22,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/journey-definitions/{journeyDefinitionId}/transitions/{transitionId}/conditions")
 public class TransitionConditionController {
+
+    private final TransitionConditionRepositoryPort conditionRepository;
+
+    public TransitionConditionController(TransitionConditionRepositoryPort conditionRepository) {
+        this.conditionRepository = conditionRepository;
+    }
 
     /**
      * Creates a new transition condition
@@ -40,17 +48,14 @@ public class TransitionConditionController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Convert request to domain entity
-        TransitionCondition condition = TransitionConditionMapper.toDomain(request);
+        // Convert request to domain entity with additional fields
+        TransitionCondition condition =
+                TransitionConditionMapper.toDomain(request, journeyDefinitionId, transitionId);
 
-        // TODO: Set additional fields when TransitionCondition entity is updated
-        // condition.setJourneyDefinitionId(journeyDefinitionId);
-        // condition.setTransitionId(transitionId);
+        // Save to repository
+        TransitionCondition savedCondition = conditionRepository.save(condition);
 
-        // TODO: Save to repository when implemented
-        // TransitionCondition savedCondition = conditionRepository.save(condition);
-
-        return ResponseEntity.ok(TransitionConditionMapper.toResponse(condition));
+        return ResponseEntity.ok(TransitionConditionMapper.toResponse(savedCondition));
     }
 
     /**
@@ -64,12 +69,11 @@ public class TransitionConditionController {
     public ResponseEntity<List<TransitionConditionResponse>> getConditions(
             @PathVariable String journeyDefinitionId, @PathVariable String transitionId) {
 
-        // TODO: Fetch from repository when implemented
-        // List<TransitionCondition> conditions =
-        // conditionRepository.findByTransitionId(transitionId);
+        // Fetch from repository
+        List<TransitionCondition> conditions = conditionRepository.findByTransitionId(transitionId);
 
-        // For now, return empty list
-        List<TransitionConditionResponse> responses = List.of();
+        List<TransitionConditionResponse> responses = conditions.stream()
+                .map(TransitionConditionMapper::toResponse).collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
     }
@@ -87,11 +91,10 @@ public class TransitionConditionController {
             @PathVariable String journeyDefinitionId, @PathVariable String transitionId,
             @PathVariable String conditionId) {
 
-        // TODO: Fetch from repository when implemented
-        // Optional<TransitionCondition> condition = conditionRepository.findById(conditionId);
-
-        // For now, return not found
-        return ResponseEntity.notFound().build();
+        // Fetch from repository
+        return conditionRepository.findById(conditionId).map(
+                condition -> ResponseEntity.ok(TransitionConditionMapper.toResponse(condition)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -114,19 +117,18 @@ public class TransitionConditionController {
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO: Fetch and update when repository is implemented
-        // Optional<TransitionCondition> existingCondition =
-        // conditionRepository.findById(conditionId);
-        // if (existingCondition.isPresent()) {
-        // TransitionCondition updatedCondition = TransitionConditionMapper.toDomain(request);
-        // updatedCondition.setId(conditionId);
-        // updatedCondition.setJourneyDefinitionId(journeyDefinitionId);
-        // updatedCondition.setTransitionId(transitionId);
-        // TransitionCondition savedCondition = conditionRepository.save(updatedCondition);
-        // return ResponseEntity.ok(TransitionConditionMapper.toResponse(savedCondition));
-        // }
+        // Fetch and update existing condition
+        return conditionRepository.findById(conditionId).map(existingCondition -> {
+            TransitionCondition updatedCondition = TransitionCondition.builder().id(conditionId)
+                    .journeyDefinitionId(journeyDefinitionId).transitionId(transitionId)
+                    .expression(request.getExpression())
+                    .compiledExpression(existingCondition.getCompiledExpression())
+                    .validationHash(existingCondition.getValidationHash())
+                    .createdAt(existingCondition.getCreatedAt()).updatedAt(Instant.now()).build();
 
-        return ResponseEntity.notFound().build();
+            TransitionCondition savedCondition = conditionRepository.save(updatedCondition);
+            return ResponseEntity.ok(TransitionConditionMapper.toResponse(savedCondition));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -141,10 +143,13 @@ public class TransitionConditionController {
     public ResponseEntity<Void> deleteCondition(@PathVariable String journeyDefinitionId,
             @PathVariable String transitionId, @PathVariable String conditionId) {
 
-        // TODO: Delete when repository is implemented
-        // boolean deleted = conditionRepository.deleteById(conditionId);
+        // Delete from repository
+        boolean deleted = conditionRepository.deleteById(conditionId);
 
-        // For now, assume success
-        return ResponseEntity.noContent().build();
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

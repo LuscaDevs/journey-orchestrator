@@ -27,6 +27,16 @@ public class TransitionCondition {
     private String id;
 
     /**
+     * Journey definition ID this condition belongs to
+     */
+    private String journeyDefinitionId;
+
+    /**
+     * Transition ID this condition belongs to
+     */
+    private String transitionId;
+
+    /**
      * Raw SpEL expression string
      */
     private String expression;
