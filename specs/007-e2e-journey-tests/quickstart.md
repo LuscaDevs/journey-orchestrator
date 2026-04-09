@@ -6,12 +6,14 @@
 ## Prerequisites
 
 ### Development Environment
+
 - Java 21 (LTS) installed
 - Maven 3.8+ installed
 - Docker and Docker Compose installed (for Testcontainers)
 - IDE with Java support (IntelliJ IDEA recommended)
 
 ### Project Dependencies
+
 The framework requires these additional dependencies (to be added to `pom.xml`):
 
 ```xml
@@ -23,7 +25,7 @@ The framework requires these additional dependencies (to be added to `pom.xml`):
         <version>5.4.0</version>
         <scope>test</scope>
     </dependency>
-    
+
     <!-- JSON Schema validation -->
     <dependency>
         <groupId>com.networknt</groupId>
@@ -31,7 +33,7 @@ The framework requires these additional dependencies (to be added to `pom.xml`):
         <version>1.0.87</version>
         <scope>test</scope>
     </dependency>
-    
+
     <!-- Performance testing support -->
     <dependency>
         <groupId>org.awaitility</groupId>
@@ -39,7 +41,7 @@ The framework requires these additional dependencies (to be added to `pom.xml`):
         <version>4.2.0</version>
         <scope>test</scope>
     </dependency>
-    
+
     <!-- Testcontainers (already included, ensure version compatibility) -->
     <dependency>
         <groupId>org.testcontainers</groupId>
@@ -72,39 +74,39 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 @DisplayName("Simple Journey Flow Tests")
 @TestMethodOrder(OrderAnnotation.class)
 class SimpleJourneyFlowTest extends JourneyTestBase {
-    
+
     @Test
     @Order(1)
     @DisplayName("Should create and execute simple journey successfully")
     void shouldCreateAndExecuteSimpleJourney() {
         // Arrange: Create journey definition from fixture
         var journeyDefinition = JourneyDefinitionFixtures.simpleJourney().create();
-        
+
         // Act: Create journey definition via API
         var createdJourney = createJourneyDefinition(journeyDefinition);
-        
+
         // Assert: Journey was created successfully
         assertThat(createdJourney.getStatusCode()).isEqualTo(201);
         assertThat(createdJourney.getBody().getJourneyCode()).isEqualTo("SIMPLE_JOURNEY");
-        
+
         // Act: Start journey instance
         var instance = startJourneyInstance(
             createdJourney.getBody().getJourneyCode(),
             createdJourney.getBody().getVersion(),
             Map.of("customerId", "test-customer-123")
         );
-        
+
         // Assert: Instance started in initial state
         assertThat(instance.getStatusCode()).isEqualTo(201);
         assertThat(instance.getBody().getCurrentState()).isEqualTo("START");
-        
+
         // Act: Send completion event
         var updatedInstance = sendEvent(
             instance.getBody().getInstanceId(),
             "COMPLETE",
             Map.of("completedBy", "test-user")
         );
-        
+
         // Assert: Journey completed successfully
         assertThat(updatedInstance.getStatusCode()).isEqualTo(200);
         assertThat(updatedInstance.getBody().getCurrentState()).isEqualTo("END");
@@ -129,6 +131,7 @@ mvn failsafe:integration-test -Dspring.profiles.active=e2e-test -Dperformance.mo
 ### 3. View Test Reports
 
 After test execution, reports are generated in:
+
 - HTML Report: `target/failsafe-reports/e2e-report.html`
 - JSON Report: `target/failsafe-reports/e2e-report.json`
 - Performance Metrics: `target/failsafe-reports/performance-metrics.json`
@@ -147,16 +150,16 @@ void shouldHandleConditionalTransitions() {
     var conditionalJourney = JourneyDefinitionFixtures.conditionalJourney()
         .withVariable("amount", 1500) // High amount
         .create();
-    
+
     var createdJourney = createJourneyDefinition(conditionalJourney);
-    var instance = startJourneyInstance(createdJourney.getBody().getJourneyCode(), 
-                                   createdJourney.getBody().getVersion(), 
+    var instance = startJourneyInstance(createdJourney.getBody().getJourneyCode(),
+                                   createdJourney.getBody().getVersion(),
                                    Map.of());
-    
+
     // Send processing event
-    var updatedInstance = sendEvent(instance.getBody().getInstanceId(), "PROCESS", 
+    var updatedInstance = sendEvent(instance.getBody().getInstanceId(), "PROCESS",
                                Map.of("amount", 1500, "priority", "HIGH"));
-    
+
     // Should transition to APPROVED due to condition
     assertThat(updatedInstance.getBody().getCurrentState()).isEqualTo("APPROVED");
 }
@@ -171,9 +174,9 @@ Test error scenarios and validation:
 @DisplayName("Should reject invalid journey definition")
 void shouldRejectInvalidJourneyDefinition() {
     var invalidJourney = JourneyDefinitionFixtures.invalidJourney().create();
-    
+
     var response = createJourneyDefinition(invalidJourney);
-    
+
     assertThat(response.getStatusCode()).isEqualTo(400);
     assertThat(response.getBody().getError().getCode()).isEqualTo("INVALID_JOURNEY_DEFINITION");
 }
@@ -205,7 +208,7 @@ Validate API compliance:
 @DisplayName("Should validate journey definition against OpenAPI schema")
 void shouldValidateJourneyDefinitionSchema() {
     var journeyDefinition = JourneyDefinitionFixtures.simpleJourney().create();
-    
+
     given()
         .spec(getRequestSpecification())
         .body(journeyDefinition)
@@ -262,7 +265,7 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/test}
       database: journey-e2e-test
-  
+
   test:
     database:
       replace: none # Use Testcontainers instead
@@ -275,12 +278,12 @@ e2e:
         max-response-time: 2s
         max-error-rate: 0.05
         min-throughput: 10
-    
+
     reporting:
       enabled: true
       formats: [HTML, JSON]
       output-dir: target/e2e-reports
-    
+
     cleanup:
       auto-cleanup: true
       isolation-level: METHOD
@@ -305,31 +308,60 @@ systemLog:
 
 ## Best Practices
 
+## Test Coverage with JaCoCo
+
+This project uses the **JaCoCo** Maven plugin for code coverage. There is no need to implement or maintain a custom CoverageAnalyzer, as JaCoCo already covers all requirements for E2E, integration, and unit test coverage.
+
+**How to generate the coverage report:**
+
+```bash
+mvn verify
+# or
+mvn test
+# The report will be available at target/site/jacoco/index.html
+```
+
+**Why JaCoCo?**
+
+- Industry standard, auditable, and fully integrated with Maven.
+- Generates detailed reports (line, branch, method coverage).
+- Compatible with CI/CD pipelines and IDEs.
+- Avoids duplicated logic and extra maintenance.
+
+**When to consider something custom?**
+
+- Only if you have coverage requirements not supported by JaCoCo (e.g., mutation testing, dynamic contract coverage, etc.), which is not the case for this project.
+
 ### Test Organization
+
 - Group related tests in nested classes
 - Use descriptive display names
 - Order tests logically when dependencies exist
 - Keep tests independent and isolated
 
 ### Data Management
+
 - Use fixtures for reusable test data
 - Generate unique IDs to avoid conflicts
 - Clean up test data after each test
 - Use appropriate isolation levels
 
 ### Performance Testing
+
 - Set realistic performance thresholds
 - Test with realistic data volumes
 - Monitor resource usage
 - Run performance tests in dedicated environments
 
 ### Error Handling
+
 - Test both happy path and error scenarios
 - Validate error responses and messages
 - Test edge cases and boundary conditions
 - Ensure graceful degradation
 
 ### CI/CD Integration
+
 - Run E2E tests in dedicated stage
 - Use parallel execution for faster feedback
 - Generate and archive test reports
@@ -340,6 +372,7 @@ systemLog:
 ### Common Issues
 
 **Testcontainers Fails to Start**
+
 ```bash
 # Ensure Docker is running
 docker --version
@@ -350,6 +383,7 @@ sudo systemctl status docker
 ```
 
 **Port Conflicts**
+
 ```bash
 # Kill processes using test ports
 lsof -ti:8080 | xargs kill -9
@@ -359,6 +393,7 @@ spring.profiles.active=e2e-test,random-ports
 ```
 
 **Memory Issues**
+
 ```bash
 # Increase JVM memory for tests
 export MAVEN_OPTS="-Xmx2g -Xms1g"
@@ -370,6 +405,7 @@ mvn failsafe:integration-test -Dparallel.tests=2
 ### Debug Mode
 
 Enable debug logging:
+
 ```bash
 mvn failsafe:integration-test -Dspring.profiles.active=e2e-test,debug
 ```
@@ -377,6 +413,7 @@ mvn failsafe:integration-test -Dspring.profiles.active=e2e-test,debug
 ### Test Isolation Issues
 
 Check test data cleanup:
+
 ```java
 @AfterEach
 void verifyCleanup() {
@@ -395,6 +432,7 @@ void verifyCleanup() {
 5. **Monitor Results**: Review test reports and performance metrics
 
 For more detailed information, refer to:
+
 - [Data Model Documentation](data-model.md)
 - [API Contracts](contracts/e2e-framework-api.md)
 - [Implementation Tasks](tasks.md) (generated by `/speckit.tasks`)

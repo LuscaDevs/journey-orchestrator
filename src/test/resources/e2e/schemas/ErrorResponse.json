@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProblemDetails",
+  "type": "object",
+  "required": ["type", "title", "status", "detail", "instance"],
+  "properties": {
+    "type": { "type": "string", "format": "uri" },
+    "title": { "type": "string" },
+    "status": { "type": "integer" },
+    "detail": { "type": "string" },
+    "instance": { "type": "string" },
+    "errorCode": { "type": "string" },
+    "fieldCount": { "type": "integer" }
+  },
+  "additionalProperties": true
+}

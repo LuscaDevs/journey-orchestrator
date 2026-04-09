@@ -5,7 +5,7 @@
 **Status**: Draft  
 **Input**: User description: "I need to create end-to-end (E2E) tests to validate the entire journey creation flow, instances, conditions, and everything that's part of a complete journey flow. This feature needs to adhere to best E2E development standards and the project architecture. Additionally, I want the constitution updated so that every new feature that adds something to the flow must validate whether the E2E tests still work."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Complete Journey Lifecycle Validation (Priority: P1)
 
@@ -81,7 +81,7 @@ As an API consumer, I want E2E tests that validate the API contracts and integra
 - How does the system handle extremely complex SpEL expressions in conditions?
 - What happens when journey instances remain in intermediate states for extended periods?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -111,7 +111,17 @@ As an API consumer, I want E2E tests that validate the API contracts and integra
 - **ContractValidator**: Validates API responses against OpenAPI specification
 - **TestReporter**: Generates comprehensive test execution reports and coverage analysis
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
+
+### Test Coverage
+
+The coverage success criteria is achieved using JaCoCo, which provides reliable and auditable metrics. There is no need to implement a custom CoverageAnalyzer, as JaCoCo already covers all coverage requirements defined for the project.
+
+**Justification:**
+
+- JaCoCo is industry standard, auditable, and Maven-integrated.
+- Reports are generated automatically and can be validated in CI/CD pipelines.
+- Custom tools are only recommended if there are requirements not covered by JaCoCo, which does not apply here.
 
 ### Measurable Outcomes
 

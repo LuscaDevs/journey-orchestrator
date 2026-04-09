@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateJourneyInstanceRequest",
+  "type": "object",
+  "required": ["journeyCode", "version"],
+  "properties": {
+    "journeyCode": { "type": "string" },
+    "version": { "type": "integer" },
+    "context": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

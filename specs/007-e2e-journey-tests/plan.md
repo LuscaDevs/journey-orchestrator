@@ -19,11 +19,11 @@ Create a comprehensive E2E testing framework for the Journey Orchestrator using 
 **Project Type**: Testing framework for existing web service  
 **Performance Goals**: <2 second average response time for 100+ concurrent journey instances, <10 minute full regression test execution  
 **Constraints**: Must follow clean architecture, no business logic in test framework, technology-agnostic test scenarios  
-**Scale/Scope**: Support 100+ concurrent test instances, cover all API endpoints, validate complete journey workflows  
+**Scale/Scope**: Support 100+ concurrent test instances, cover all API endpoints, validate complete journey workflows
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ✅ **Architecture Principles**: E2E framework will follow clean architecture with test adapters separate from production code
 ✅ **Technology Stack**: Uses approved Java 21, Spring Boot, MongoDB with proper testing extensions
@@ -108,7 +108,7 @@ src/test/resources/
 
 ## Constitution Check (Post-Design)
 
-*Re-evaluated after Phase 1 design completion*
+_Re-evaluated after Phase 1 design completion_
 
 ✅ **Architecture Principles**: E2E framework maintains clean architecture with test adapters separate from production code, no business logic in test layer
 ✅ **Technology Stack**: Uses approved Java 21, Spring Boot, MongoDB with RestAssured, Testcontainers, and JUnit 5 - all compatible with existing stack
@@ -123,12 +123,14 @@ src/test/resources/
 ## Phase 1 Summary
 
 **Completed Artifacts**:
+
 - ✅ **research.md**: Technical decisions and alternatives evaluation
 - ✅ **data-model.md**: Complete entity definitions and relationships
 - ✅ **contracts/**: Framework API contracts and interfaces
 - ✅ **quickstart.md**: Developer onboarding guide and examples
 
 **Key Design Decisions**:
+
 - RestAssured for API testing with Spring Boot Test integration
 - Testcontainers for isolated test environments with MongoDB
 - JUnit 5 with nested tests and method ordering
@@ -136,11 +138,13 @@ src/test/resources/
 - Performance testing integrated with standard test assertions
 
 **Architecture Compliance**:
+
 - All design decisions align with project constitution
 - No violations identified requiring justification
 - Framework extends existing patterns without breaking changes
 
 **Next Steps**:
+
 - Proceed to `/speckit.tasks` to generate implementation tasks
 - Update Maven dependencies for RestAssured and additional testing libraries
 - Implement framework core components following defined contracts
@@ -148,12 +152,27 @@ src/test/resources/
 
 ## Complexity Tracking
 
+## Test Coverage
+
+This project uses the **JaCoCo** Maven plugin for code coverage. JaCoCo is the industry standard for Java projects, integrated with Maven, easy to configure, and compatible with CI/CD tools. It covers all scenarios required to ensure E2E test quality, including line, branch, and method metrics.
+
+**Why not use a custom CoverageAnalyzer?**
+
+- JaCoCo already provides detailed coverage and automatic integration with Maven and HTML/CSV reports.
+- Avoids duplicated logic and extra maintenance.
+- Widely supported by IDEs, pipelines, and analysis tools.
+- A custom CoverageAnalyzer is only needed if JaCoCo does not cover specific requirements, which is not the case for this project.
+
+**How to use:**
+
+- Just run `mvn verify` or `mvn test` to generate the report at `target/site/jacoco/index.html`.
+
 > **No Constitution violations identified - all design decisions align with project standards**
 
-| Aspect | Complexity | Mitigation Strategy |
-|---------|-------------|-------------------|
-| Test Environment Setup | Medium | Use Testcontainers with standardized configuration |
-| Performance Testing | Medium | Leverage existing JUnit 5 with custom assertions |
-| Contract Validation | Low | RestAssured provides built-in JSON schema validation |
-| Test Data Management | Low | Builder pattern with reusable fixtures |
-| CI/CD Integration | Low | Maven Failsafe plugin with standard configuration |
+| Aspect                 | Complexity | Mitigation Strategy                                  |
+| ---------------------- | ---------- | ---------------------------------------------------- |
+| Test Environment Setup | Medium     | Use Testcontainers with standardized configuration   |
+| Performance Testing    | Medium     | Leverage existing JUnit 5 with custom assertions     |
+| Contract Validation    | Low        | RestAssured provides built-in JSON schema validation |
+| Test Data Management   | Low        | Builder pattern with reusable fixtures               |
+| CI/CD Integration      | Low        | Maven Failsafe plugin with standard configuration    |
