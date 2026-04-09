@@ -1,6 +1,8 @@
 spring:
   data:
     mongodb:
+      uri: mongodb://localhost:27017/journey-orchestrator-test
+      database: journey-orchestrator-test
       auto-index-creation: false
   test:
     database:

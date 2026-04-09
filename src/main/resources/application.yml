@@ -10,7 +10,10 @@ spring:
   
   # Validation Configuration
   mvc:
-    throw-exception-if-no-handler-found: false
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
   
   # SpringDoc OpenAPI configuration
   springdoc:

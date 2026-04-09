@@ -1,0 +1,43 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/journey-e2e-test}
+      database: journey-e2e-test
+  
+  test:
+    database:
+      replace: none # Use Testcontainers instead
+
+e2e:
+  framework:
+    performance:
+      enabled: true
+      thresholds:
+        max-response-time: 2s
+        max-error-rate: 0.05
+        min-throughput: 10
+    
+    reporting:
+      enabled: true
+      formats: [HTML, JSON]
+      output-dir: target/e2e-reports
+    
+    cleanup:
+      auto-cleanup: true
+      isolation-level: METHOD
+      
+    testcontainers:
+      mongodb:
+        image: mongo:7.0
+        port: 27017
+        startup-timeout: 60s
+        
+    restassured:
+      base-uri: http://localhost:8080
+      port: 8080
+      
+logging:
+  level:
+    com.luscadevs.journeyorchestrator.e2e: DEBUG
+    org.testcontainers: INFO
+    io.rest-assured: INFO

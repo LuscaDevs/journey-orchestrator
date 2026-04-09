@@ -1,0 +1,26 @@
+{
+  "journeyCode": "SIMPLE_JOURNEY",
+  "name": "Simple Test Journey",
+  "version": 1,
+  "active": true,
+  "states": [
+    {
+      "name": "START",
+      "type": "INITIAL",
+      "description": "Initial state of the journey"
+    },
+    {
+      "name": "END",
+      "type": "FINAL",
+      "description": "Final state of the journey"
+    }
+  ],
+  "transitions": [
+    {
+      "source": "START",
+      "event": "COMPLETE",
+      "target": "END",
+      "description": "Transition to end state"
+    }
+  ]
+}

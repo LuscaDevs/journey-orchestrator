@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -33,9 +32,15 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
     private static final Logger logger = LoggerFactory.getLogger(ConditionEvaluatorService.class);
     private final ExpressionParser expressionParser;
 
-    // Expression compilation cache for performance
-    private final ConcurrentHashMap<String, Expression> compiledExpressionCache =
-            new ConcurrentHashMap<>();
+    // Expression compilation cache for performance with LRU eviction
+    private final java.util.LinkedHashMap<String, Expression> compiledExpressionCache =
+            new java.util.LinkedHashMap<String, Expression>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(
+                        java.util.Map.Entry<String, Expression> eldest) {
+                    return size() > MAX_CACHE_SIZE;
+                }
+            };
 
     // Performance monitoring
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -149,19 +154,22 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
         // Enable property access on maps using dot notation
         evaluationContext.addPropertyAccessor(new MapAccessor());
 
-        // Add journey data as a variable
+        // Add journey data as a variable (create defensive copy)
         if (context.getJourneyData() != null) {
-            evaluationContext.setVariable("journeyData", context.getJourneyData());
+            evaluationContext.setVariable("journeyData",
+                    new java.util.HashMap<>(context.getJourneyData()));
         }
 
-        // Add event data as a variable
+        // Add event data as a variable (create defensive copy)
         if (context.getEventData() != null) {
-            evaluationContext.setVariable("eventData", context.getEventData());
+            evaluationContext.setVariable("eventData",
+                    new java.util.HashMap<>(context.getEventData()));
         }
 
-        // Add system data as a variable
+        // Add system data as a variable (create defensive copy)
         if (context.getSystemData() != null) {
-            evaluationContext.setVariable("systemData", context.getSystemData());
+            evaluationContext.setVariable("systemData",
+                    new java.util.HashMap<>(context.getSystemData()));
         }
 
         return evaluationContext;
@@ -195,7 +203,7 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
     /**
      * Gets compiled expression from cache or compiles and caches it
      */
-    private Expression getOrCompileExpression(String expression) {
+    private synchronized Expression getOrCompileExpression(String expression) {
         // Check cache first
         Expression cached = compiledExpressionCache.get(expression);
         if (cached != null) {
@@ -210,13 +218,7 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
 
         Expression compiled = expressionParser.parseExpression(expression);
 
-        // Manage cache size
-        if (compiledExpressionCache.size() >= MAX_CACHE_SIZE) {
-            // Simple eviction strategy - remove oldest entries
-            compiledExpressionCache.clear();
-            logger.info("Expression cache cleared due to size limit");
-        }
-
+        // LRU cache automatically handles eviction when size exceeds MAX_CACHE_SIZE
         compiledExpressionCache.put(expression, compiled);
         return compiled;
     }

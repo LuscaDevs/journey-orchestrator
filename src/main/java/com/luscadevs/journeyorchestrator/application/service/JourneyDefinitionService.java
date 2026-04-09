@@ -24,10 +24,11 @@ public class JourneyDefinitionService {
                 JourneyDefinition definition = JourneyDefinitionMapper.toDomain(request);
 
                 // Check if journey definition already exists
-                repository.findByJourneyCodeAndVersion(definition.getJourneyCode(), definition.getVersion())
-                                .ifPresent(existing -> {
+                repository.findByJourneyCodeAndVersion(definition.getJourneyCode(),
+                                definition.getVersion()).ifPresent(existing -> {
                                         throw new JourneyDefinitionAlreadyExistsException(
-                                                        definition.getJourneyCode() + ":" + definition.getVersion());
+                                                        definition.getJourneyCode() + ":"
+                                                                        + definition.getVersion());
                                 });
 
                 repository.save(definition);
@@ -41,9 +42,8 @@ public class JourneyDefinitionService {
         }
 
         public JourneyDefinition getJourneyDefinition(String id, Integer version) {
-                return repository
-                                .findByJourneyCodeAndVersion(id, version)
-                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(id + ":" + version));
+                return repository.findByJourneyCodeAndVersion(id, version).orElseThrow(
+                                () -> new JourneyDefinitionNotFoundException(id + ":" + version));
         }
 
         public List<JourneyDefinition> getAllJourneyDefinitions() {

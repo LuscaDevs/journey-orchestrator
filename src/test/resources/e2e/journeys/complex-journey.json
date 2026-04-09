@@ -1,0 +1,47 @@
+{
+  "journeyCode": "COMPLEX_CONDITIONAL_JOURNEY",
+  "name": "Complex Conditional Test Journey",
+  "version": 1,
+  "description": "A journey with complex nested conditional logic",
+  "states": {
+    "name": "START",
+    "type": "INITIAL",
+    "description": "Initial state for complex evaluation"
+  },
+  "transitions": {
+    "source": "START",
+    "event": "EVALUATE",
+    "target": "PREMIUM_APPROVED",
+    "condition": "#eventData.amount > 1500 && #eventData.customerRating == 'A+' && #eventData.riskScore < 200 && #eventData.productCategory == 'luxury' && #eventData.timeOfDay == 'business_hours'",
+    "description": "Premium approval with multiple conditions"
+  },
+  "alternativeTransitions": {
+    "transitions": [
+      {
+        "source": "START",
+        "event": "EVALUATE",
+        "target": "STANDARD_APPROVED",
+        "condition": "#eventData.amount > 500 && #eventData.amount <= 1500",
+        "description": "Standard approval path"
+      },
+      {
+        "source": "START",
+        "event": "EVALUATE",
+        "target": "BASIC_APPROVED",
+        "condition": "#eventData.amount <= 500",
+        "description": "Basic approval path"
+      },
+      {
+        "source": "START",
+        "event": "EVALUATE",
+        "target": "CONDITION_ERROR",
+        "description": "Default path for condition evaluation errors"
+      }
+    ]
+  },
+  "endStates": {
+    "name": "PREMIUM_APPROVED",
+    "type": "FINAL",
+    "description": "Premium approval final state"
+  }
+}

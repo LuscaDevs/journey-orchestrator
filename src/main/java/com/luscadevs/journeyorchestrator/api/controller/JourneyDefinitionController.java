@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
 
@@ -22,6 +24,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 @RestController
+@RequestMapping("/journeys")
 public class JourneyDefinitionController implements JourneysApi {
 
     private static final Logger logger = LoggerFactory.getLogger(JourneyDefinitionController.class);
@@ -38,6 +41,7 @@ public class JourneyDefinitionController implements JourneysApi {
     }
 
     @Override
+    @PostMapping
     public ResponseEntity<JourneyDefinitionResponse> createJourneyDefinition(
             @Valid CreateJourneyDefinitionRequest request) {
 

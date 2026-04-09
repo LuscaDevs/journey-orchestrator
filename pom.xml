@@ -134,6 +134,28 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
 		</dependency>
+
+		<!-- E2E Testing Framework Dependencies -->
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<version>6.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.networknt</groupId>
+			<artifactId>json-schema-validator</artifactId>
+			<version>1.0.87</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<version>4.2.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
