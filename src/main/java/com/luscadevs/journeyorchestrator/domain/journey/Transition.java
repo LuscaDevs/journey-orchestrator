@@ -15,4 +15,6 @@ public class Transition {
 
     private State targetState;
 
+    private String condition;
+
 }

@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Integration tests to verify that domain exceptions are properly used
- * in JourneyInstanceService methods.
+ * Integration tests to verify that domain exceptions are properly used in JourneyInstanceService
+ * methods.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -51,10 +51,8 @@ class JourneyInstanceServiceIntegrationTest {
 
         @BeforeEach
         void setUp() {
-                journeyInstanceService = new JourneyInstanceService(
-                                journeyInstanceRepository,
-                                journeyDefinitionRepository,
-                                journeyEngine,
+                journeyInstanceService = new JourneyInstanceService(journeyInstanceRepository,
+                                journeyDefinitionRepository, journeyEngine,
                                 transitionHistoryService);
         }
 
@@ -71,10 +69,12 @@ class JourneyInstanceServiceIntegrationTest {
                 // When & Then
                 JourneyDefinitionNotFoundException exception = assertThrows(
                                 JourneyDefinitionNotFoundException.class,
-                                () -> journeyInstanceService.startJourney(journeyCode, version, context));
+                                () -> journeyInstanceService.startJourney(journeyCode, version,
+                                                context));
 
                 assertEquals("NON_EXISTENT:1", exception.getJourneyDefinitionId());
-                verify(journeyDefinitionRepository).findByJourneyCodeAndVersion(journeyCode, version);
+                verify(journeyDefinitionRepository).findByJourneyCodeAndVersion(journeyCode,
+                                version);
                 verify(journeyInstanceRepository, never()).save(any());
         }
 
@@ -83,8 +83,7 @@ class JourneyInstanceServiceIntegrationTest {
                 // Given
                 String instanceId = "non-existent-instance";
 
-                when(journeyInstanceRepository.findById(instanceId))
-                                .thenReturn(Optional.empty());
+                when(journeyInstanceRepository.findById(instanceId)).thenReturn(Optional.empty());
 
                 // When & Then
                 JourneyInstanceNotFoundException exception = assertThrows(
@@ -101,7 +100,8 @@ class JourneyInstanceServiceIntegrationTest {
                 String instanceId = "completed-instance";
                 Event event = Event.of("TEST_EVENT");
 
-                JourneyInstance completedInstance = createMockJourneyInstance(instanceId, JourneyStatus.COMPLETED);
+                JourneyInstance completedInstance =
+                                createMockJourneyInstance(instanceId, JourneyStatus.COMPLETED);
 
                 when(journeyInstanceRepository.findById(instanceId))
                                 .thenReturn(Optional.of(completedInstance));
@@ -109,11 +109,12 @@ class JourneyInstanceServiceIntegrationTest {
                 // When & Then
                 JourneyAlreadyCompletedException exception = assertThrows(
                                 JourneyAlreadyCompletedException.class,
-                                () -> journeyInstanceService.applyEvent(instanceId, event));
+                                () -> journeyInstanceService.applyEvent(instanceId, event, null));
 
                 assertEquals(instanceId, exception.getJourneyInstanceId());
                 verify(journeyInstanceRepository).findById(instanceId);
-                verify(journeyEngine, never()).applyEvent(any(), any(), any());
+                verify(journeyEngine, never()).applyEvent(any(JourneyInstance.class),
+                                any(JourneyDefinition.class), any(Event.class), any());
         }
 
         @Test
@@ -122,34 +123,34 @@ class JourneyInstanceServiceIntegrationTest {
                 String instanceId = "instance-with-invalid-transition";
                 Event event = Event.of("INVALID_EVENT");
 
-                JourneyInstance instance = createMockJourneyInstance(instanceId, JourneyStatus.RUNNING);
+                JourneyInstance instance =
+                                createMockJourneyInstance(instanceId, JourneyStatus.RUNNING);
                 JourneyDefinition definition = createMockJourneyDefinition();
 
                 when(journeyInstanceRepository.findById(instanceId))
                                 .thenReturn(Optional.of(instance));
 
                 when(journeyDefinitionRepository.findByJourneyCodeAndVersion(
-                                instance.getJourneyDefinitionId(),
-                                instance.getJourneyVersion()))
-                                .thenReturn(Optional.of(definition));
+                                instance.getJourneyDefinitionId(), instance.getJourneyVersion()))
+                                                .thenReturn(Optional.of(definition));
 
                 // Mock engine to throw exception for invalid transition
-                doThrow(new RuntimeException("Event INVALID_EVENT not allowed in state CURRENT_STATE"))
-                                .when(journeyEngine).applyEvent(instance, definition, event);
+                doThrow(new InvalidStateTransitionException(instanceId, "CURRENT_STATE",
+                                "INVALID_EVENT")).when(journeyEngine).applyEvent(eq(instance),
+                                                eq(definition), eq(event), any());
 
                 // When & Then
                 InvalidStateTransitionException exception = assertThrows(
                                 InvalidStateTransitionException.class,
-                                () -> journeyInstanceService.applyEvent(instanceId, event));
+                                () -> journeyInstanceService.applyEvent(instanceId, event, null));
 
                 assertEquals(instanceId, exception.getJourneyInstanceId());
                 assertEquals("CURRENT_STATE", exception.getFromState());
                 assertEquals("INVALID_EVENT", exception.getToState());
                 verify(journeyInstanceRepository).findById(instanceId);
                 verify(journeyDefinitionRepository).findByJourneyCodeAndVersion(
-                                instance.getJourneyDefinitionId(),
-                                instance.getJourneyVersion());
-                verify(journeyEngine).applyEvent(instance, definition, event);
+                                instance.getJourneyDefinitionId(), instance.getJourneyVersion());
+                verify(journeyEngine).applyEvent(eq(instance), eq(definition), eq(event), any());
         }
 
         // Helper methods

@@ -2,6 +2,16 @@ spring:
   profiles:
     active: dev
   
+  # Jackson Configuration
+  jackson:
+    default-property-inclusion: non_null
+    fail-on-unknown-properties: false
+    accept-empty-string-as-null: true
+  
+  # Validation Configuration
+  mvc:
+    throw-exception-if-no-handler-found: false
+  
   # SpringDoc OpenAPI configuration
   springdoc:
     api-docs:

@@ -33,28 +33,38 @@ public class JourneyDefinitionDocumentMapper {
 
                 // Map states using available fields
                 if (journeyDefinition.getStates() != null) {
-                        List<JourneyDefinitionDocument.StateDocument> stateDocuments = journeyDefinition.getStates()
-                                        .stream()
-                                        .map(state -> new JourneyDefinitionDocument.StateDocument(
-                                                        state.getName(),
-                                                        state.getType().name()))
-                                        .collect(Collectors.toList());
+                        List<JourneyDefinitionDocument.StateDocument> stateDocuments =
+                                        journeyDefinition.getStates().stream().map(
+                                                        state -> new JourneyDefinitionDocument.StateDocument(
+                                                                        state.getName(),
+                                                                        state.getType().name()))
+                                                        .collect(Collectors.toList());
                         document.setStates(stateDocuments);
                 }
 
                 // Map transitions using available fields
                 if (journeyDefinition.getTransitions() != null) {
-                        List<JourneyDefinitionDocument.TransitionDocument> transitionDocuments = journeyDefinition
-                                        .getTransitions().stream()
-                                        .map(transition -> new JourneyDefinitionDocument.TransitionDocument(
-                                                        transition.getEvent().getName(),
-                                                        transition.getSourceState().getName(),
-                                                        transition.getTargetState().getName(),
-                                                        transition.getEvent().getName(),
-                                                        null, // condition - not available in current domain
-                                                        null // metadata - not available in current domain
-                                        ))
-                                        .collect(Collectors.toList());
+                        List<JourneyDefinitionDocument.TransitionDocument> transitionDocuments =
+                                        journeyDefinition.getTransitions().stream().map(
+                                                        transition -> new JourneyDefinitionDocument.TransitionDocument(
+                                                                        transition.getEvent()
+                                                                                        .getName(),
+                                                                        transition.getSourceState()
+                                                                                        .getName(),
+                                                                        transition.getTargetState()
+                                                                                        .getName(),
+                                                                        transition.getEvent()
+                                                                                        .getName(),
+                                                                        transition.getCondition(), // condition
+                                                                                                   // -
+                                                                                                   // now
+                                                                                                   // available
+                                                                                                   // in
+                                                                                                   // domain
+                                                                        null // metadata - not
+                                                                             // available in current
+                                                                             // domain
+                                                        )).collect(Collectors.toList());
                         document.setTransitions(transitionDocuments);
                 }
 
@@ -70,34 +80,31 @@ public class JourneyDefinitionDocumentMapper {
                 }
 
                 JourneyDefinition.JourneyDefinitionBuilder builder = JourneyDefinition.builder()
-                                .id(document.getId())
-                                .journeyCode(document.getJourneyCode())
+                                .id(document.getId()).journeyCode(document.getJourneyCode())
                                 .name(document.getName())
                                 .version(Integer.parseInt(document.getVersion()))
                                 .active(document.isActive());
 
                 // Map states using available fields
                 if (document.getStates() != null) {
-                        List<State> states = document.getStates().stream()
-                                        .map(stateDoc -> State.builder()
-                                                        .name(stateDoc.getName())
-                                                        .type(com.luscadevs.journeyorchestrator.domain.journey.StateType
-                                                                        .valueOf(stateDoc.getType()))
-                                                        .build())
-                                        .collect(Collectors.toList());
+                        List<State> states = document.getStates().stream().map(stateDoc -> State
+                                        .builder().name(stateDoc.getName())
+                                        .type(com.luscadevs.journeyorchestrator.domain.journey.StateType
+                                                        .valueOf(stateDoc.getType()))
+                                        .build()).collect(Collectors.toList());
                         builder.states(states);
                 }
 
                 // Map transitions using available fields
                 if (document.getTransitions() != null) {
-                        List<Transition> transitions = document.getTransitions().stream()
-                                        .map(transDoc -> Transition.builder()
-                                                        .sourceState(State.builder().name(transDoc.getFromState())
-                                                                        .build())
-                                                        .targetState(State.builder().name(transDoc.getToState())
+                        List<Transition> transitions = document.getTransitions().stream().map(
+                                        transDoc -> Transition.builder().sourceState(State.builder()
+                                                        .name(transDoc.getFromState()).build())
+                                                        .targetState(State.builder()
+                                                                        .name(transDoc.getToState())
                                                                         .build())
                                                         .event(new Event(transDoc.getEvent()))
-                                                        .build())
+                                                        .condition(transDoc.getCondition()).build())
                                         .collect(Collectors.toList());
                         builder.transitions(transitions);
                 }

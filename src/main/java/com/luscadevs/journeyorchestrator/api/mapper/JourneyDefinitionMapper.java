@@ -13,6 +13,8 @@ import com.luscadevs.journey.api.generated.model.JourneyDefinitionResponse;
 import com.luscadevs.journey.api.generated.model.TransitionRequest;
 import com.luscadevs.journey.api.generated.model.TransitionResponse;
 
+import com.luscadevs.journeyorchestrator.application.port.ConditionEvaluatorPort;
+import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntaxException;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
@@ -21,53 +23,55 @@ import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 
 public final class JourneyDefinitionMapper {
 
-        private JourneyDefinitionMapper() {
+        private static ConditionEvaluatorPort conditionEvaluator;
+
+        private JourneyDefinitionMapper() {}
+
+        public static void setConditionEvaluator(ConditionEvaluatorPort evaluator) {
+                conditionEvaluator = evaluator;
         }
 
         public static JourneyDefinition toDomain(CreateJourneyDefinitionRequest request) {
 
                 // 1️⃣ Mapear states
-                List<State> states = request.getStates()
-                                .stream()
-                                .map(s -> {
+                List<State> states = request.getStates().stream().map(s -> {
 
-                                        StateType type = s.getType() == null
-                                                        ? StateType.NORMAL
-                                                        : StateType.valueOf(s.getType().name());
+                        // Mapear corretamente entre enums gerados e de domínio
+                        StateType domainType;
+                        if (s.getType() == null) {
+                                domainType = StateType.INTERMEDIATE;
+                        } else {
+                                switch (s.getType().getValue()) {
+                                        case "INITIAL" -> domainType = StateType.INITIAL;
+                                        case "INTERMEDIATE" -> domainType = StateType.INTERMEDIATE;
+                                        case "FINAL" -> domainType = StateType.FINAL;
+                                        default -> throw new IllegalArgumentException(
+                                                        "Unknown StateType: "
+                                                                        + s.getType().getValue());
+                                }
+                        }
 
-                                        return State.builder()
-                                                        .name(s.getName())
-                                                        .type(type)
-                                                        .build();
-                                })
-                                .toList();
+                        return State.builder().name(s.getName()).type(domainType).build();
+                }).toList();
 
                 // 2️⃣ Criar mapa para lookup rápido
                 Map<String, State> stateMap = states.stream()
                                 .collect(Collectors.toMap(State::getName, Function.identity()));
 
                 // 3️⃣ Resolver estado inicial pelo tipo
-                State initialState = states.stream()
-                                .filter(s -> s.getType() == StateType.INITIAL)
-                                .findFirst()
-                                .orElseThrow(() -> new IllegalArgumentException("No INITIAL state defined"));
+                State initialState = states.stream().filter(s -> s.getType() == StateType.INITIAL)
+                                .findFirst().orElseThrow(() -> new IllegalArgumentException(
+                                                "No INITIAL state defined"));
 
                 // 4️⃣ Mapear transitions
-                List<Transition> transitions = request.getTransitions()
-                                .stream()
-                                .map(t -> mapTransition(t, stateMap))
-                                .toList();
+                List<Transition> transitions = request.getTransitions().stream()
+                                .map(t -> mapTransition(t, stateMap)).toList();
 
                 // 5️⃣ Construir domínio
-                return JourneyDefinition.builder()
-                                .journeyCode(request.getJourneyCode())
-                                .name(request.getName())
-                                .version(request.getVersion())
-                                .states(states)
-                                .initialState(initialState)
-                                .transitions(transitions)
-                                .createdAt(Instant.now())
-                                .build();
+                return JourneyDefinition.builder().journeyCode(request.getJourneyCode())
+                                .name(request.getName()).version(request.getVersion())
+                                .states(states).initialState(initialState).transitions(transitions)
+                                .createdAt(Instant.now()).build();
         }
 
         private static Transition mapTransition(TransitionRequest t, Map<String, State> stateMap) {
@@ -76,18 +80,36 @@ public final class JourneyDefinitionMapper {
                 State target = stateMap.get(t.getTarget());
 
                 if (source == null) {
-                        throw new IllegalArgumentException("Source state '" + t.getSource() + "' not found");
+                        throw new IllegalArgumentException(
+                                        "Source state '" + t.getSource() + "' not found");
                 }
 
                 if (target == null) {
-                        throw new IllegalArgumentException("Target state '" + t.getTarget() + "' not found");
+                        throw new IllegalArgumentException(
+                                        "Target state '" + t.getTarget() + "' not found");
                 }
 
-                return Transition.builder()
-                                .sourceState(source)
-                                .targetState(target)
+                return Transition.builder().sourceState(source).targetState(target)
                                 .event(new Event(t.getEvent()))
-                                .build();
+                                .condition(validateCondition(t.getCondition())).build();
+        }
+
+        private static String validateCondition(String condition) {
+                if (condition == null || condition.trim().isEmpty()) {
+                        return condition;
+                }
+
+                if (conditionEvaluator == null) {
+                        throw new IllegalStateException(
+                                        "ConditionEvaluator not initialized. Call setConditionEvaluator() first.");
+                }
+
+                if (!conditionEvaluator.validateExpression(condition)) {
+                        throw new InvalidConditionSyntaxException(condition,
+                                        "Expression cannot be parsed.");
+                }
+
+                return condition;
         }
 
         public static JourneyDefinitionResponse toResponse(JourneyDefinition definition) {
@@ -100,18 +122,33 @@ public final class JourneyDefinitionMapper {
                 response.setVersion(definition.getVersion());
                 response.setActive(definition.isActive());
                 response.setCreatedAt(definition.getCreatedAt() != null
-                                ? OffsetDateTime.ofInstant(definition.getCreatedAt(), ZoneOffset.UTC)
+                                ? OffsetDateTime.ofInstant(definition.getCreatedAt(),
+                                                ZoneOffset.UTC)
                                 : null);
 
                 // states - handle null case
                 if (definition.getStates() != null) {
-                        List<com.luscadevs.journey.api.generated.model.State> states = definition.getStates()
-                                        .stream()
-                                        .map(s -> new com.luscadevs.journey.api.generated.model.State()
-                                                        .name(s.getName())
-                                                        .type(com.luscadevs.journey.api.generated.model.StateType
-                                                                        .valueOf(s.getType().name())))
-                                        .toList();
+                        List<com.luscadevs.journey.api.generated.model.State> states =
+                                        definition.getStates().stream().map(s -> {
+                                                com.luscadevs.journey.api.generated.model.StateType apiType;
+                                                if (s.getType() == null) {
+                                                        apiType = com.luscadevs.journey.api.generated.model.StateType.INTERMEDIATE;
+                                                } else {
+                                                        switch (s.getType()) {
+                                                                case INITIAL -> apiType =
+                                                                                com.luscadevs.journey.api.generated.model.StateType.INITIAL;
+                                                                case INTERMEDIATE -> apiType =
+                                                                                com.luscadevs.journey.api.generated.model.StateType.INTERMEDIATE;
+                                                                case FINAL -> apiType =
+                                                                                com.luscadevs.journey.api.generated.model.StateType.FINAL;
+                                                                default -> throw new IllegalArgumentException(
+                                                                                "Unknown StateType: "
+                                                                                                + s.getType());
+                                                        }
+                                                }
+                                                return new com.luscadevs.journey.api.generated.model.State()
+                                                                .name(s.getName()).type(apiType);
+                                        }).toList();
                         response.setStates(states);
                 } else {
                         response.setStates(List.of());
@@ -119,12 +156,12 @@ public final class JourneyDefinitionMapper {
 
                 // transitions - handle null case
                 if (definition.getTransitions() != null) {
-                        List<TransitionResponse> transitions = definition.getTransitions()
-                                        .stream()
+                        List<TransitionResponse> transitions = definition.getTransitions().stream()
                                         .map(t -> new TransitionResponse()
                                                         .source(t.getSourceState().getName())
                                                         .event(t.getEvent().getName())
-                                                        .target(t.getTargetState().getName()))
+                                                        .target(t.getTargetState().getName())
+                                                        .condition(t.getCondition()))
                                         .toList();
                         response.setTransitions(transitions);
                 } else {

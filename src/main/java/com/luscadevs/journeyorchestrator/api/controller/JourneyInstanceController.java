@@ -45,9 +45,10 @@ public class JourneyInstanceController implements JourneyInstancesApi {
     @PostMapping
     public ResponseEntity<JourneyInstanceResponse> createJourneyInstance(
             @Valid @RequestBody CreateJourneyInstanceRequest createJourneyInstanceRequest) {
-        JourneyInstance journeyInstance = journeyInstanceService.startJourney(
-                createJourneyInstanceRequest.getJourneyCode(),
-                createJourneyInstanceRequest.getVersion(), createJourneyInstanceRequest.getContext());
+        JourneyInstance journeyInstance =
+                journeyInstanceService.startJourney(createJourneyInstanceRequest.getJourneyCode(),
+                        createJourneyInstanceRequest.getVersion(),
+                        createJourneyInstanceRequest.getContext());
         return ResponseEntity.ok(JourneyInstanceMapper.toResponse(journeyInstance));
     }
 
@@ -64,24 +65,26 @@ public class JourneyInstanceController implements JourneyInstancesApi {
     public ResponseEntity<JourneyInstanceResponse> sendEvent(@NotNull String instanceId,
             @Valid @RequestBody EventRequest eventRequest) {
         Event event = Event.of(eventRequest.getEvent());
-        JourneyInstance journeyInstance = journeyInstanceService.applyEvent(instanceId, event);
+        JourneyInstance journeyInstance =
+                journeyInstanceService.applyEvent(instanceId, event, eventRequest.getPayload());
         return ResponseEntity.ok(JourneyInstanceMapper.toResponse(journeyInstance));
     }
 
     @GetMapping
     public ResponseEntity<List<JourneyInstanceResponse>> getAllJourneyInstances() {
         List<JourneyInstance> instances = journeyInstanceService.getAllInstances();
-        List<JourneyInstanceResponse> responses = instances.stream()
-                .map(JourneyInstanceMapper::toResponse)
-                .toList();
+        List<JourneyInstanceResponse> responses =
+                instances.stream().map(JourneyInstanceMapper::toResponse).toList();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{instanceId}/history")
     public ResponseEntity<TransitionHistoryListResponse> getJourneyInstanceTransitionHistory(
             @PathVariable @NotNull String instanceId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @RequestParam(required = false) String eventType,
             @RequestParam(defaultValue = "100") @Min(1) @Max(1000) Integer limit,
             @RequestParam(defaultValue = "0") @Min(0) Integer offset) {
@@ -93,12 +96,12 @@ public class JourneyInstanceController implements JourneyInstancesApi {
         var historyEvents = switch (getFilterType(from, to, eventType)) {
             case NONE -> transitionHistoryService.getTransitionHistory(instanceId);
             case DATE_RANGE -> transitionHistoryService.getTransitionHistory(instanceId, from, to);
-            case EVENT_TYPE -> transitionHistoryService.getTransitionHistoryByEventType(instanceId, eventType);
+            case EVENT_TYPE -> transitionHistoryService.getTransitionHistoryByEventType(instanceId,
+                    eventType);
             case BOTH -> {
-                var dateFiltered = transitionHistoryService.getTransitionHistory(instanceId, from, to);
-                yield dateFiltered.stream()
-                        .filter(event -> event.hasEventType(eventType))
-                        .toList();
+                var dateFiltered =
+                        transitionHistoryService.getTransitionHistory(instanceId, from, to);
+                yield dateFiltered.stream().filter(event -> event.hasEventType(eventType)).toList();
             }
         };
 
@@ -108,8 +111,8 @@ public class JourneyInstanceController implements JourneyInstancesApi {
         int endIndex = Math.min(startIndex + limit, totalCount);
         var paginatedEvents = historyEvents.subList(startIndex, endIndex);
 
-        TransitionHistoryListResponse response = transitionHistoryMapper.toListResponse(
-                instanceId, paginatedEvents, limit, offset, totalCount);
+        TransitionHistoryListResponse response = transitionHistoryMapper.toListResponse(instanceId,
+                paginatedEvents, limit, offset, totalCount);
 
         return ResponseEntity.ok(response);
     }
