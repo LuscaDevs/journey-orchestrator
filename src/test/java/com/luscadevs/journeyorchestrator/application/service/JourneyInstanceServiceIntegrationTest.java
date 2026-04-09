@@ -103,6 +103,10 @@ class JourneyInstanceServiceIntegrationTest {
                 JourneyInstance completedInstance =
                                 createMockJourneyInstance(instanceId, JourneyStatus.COMPLETED);
 
+                // Mock do método ensureCanReceiveEvents para lançar exceção
+                doThrow(new com.luscadevs.journeyorchestrator.domain.exception.JourneyAlreadyCompletedException(
+                                instanceId)).when(completedInstance).ensureCanReceiveEvents();
+
                 when(journeyInstanceRepository.findById(instanceId))
                                 .thenReturn(Optional.of(completedInstance));
 
