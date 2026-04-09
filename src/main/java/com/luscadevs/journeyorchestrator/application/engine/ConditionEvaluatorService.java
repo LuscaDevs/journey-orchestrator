@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.SpelEvaluationException;
+import org.springframework.expression.spel.SpelParserConfiguration;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.MapAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -52,7 +54,12 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
     private static final int MAX_CACHE_SIZE = 1000;
 
     public ConditionEvaluatorService() {
-        this.expressionParser = new SpelExpressionParser();
+        // Configure SpEL parser to allow property access on maps
+        SpelParserConfiguration config = new SpelParserConfiguration(true, // Allow auto growing
+                                                                           // collections
+                true // Allow auto growing arrays
+        );
+        this.expressionParser = new SpelExpressionParser(config);
     }
 
     @Override
@@ -138,6 +145,9 @@ public class ConditionEvaluatorService implements ConditionEvaluatorPort {
     private StandardEvaluationContext createSecureEvaluationContext(ContextData context) {
         // Create secure evaluation context
         StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+
+        // Enable property access on maps using dot notation
+        evaluationContext.addPropertyAccessor(new MapAccessor());
 
         // Add journey data as a variable
         if (context.getJourneyData() != null) {
