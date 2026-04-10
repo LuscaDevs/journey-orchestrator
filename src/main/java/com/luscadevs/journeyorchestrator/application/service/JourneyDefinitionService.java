@@ -23,17 +23,36 @@ public class JourneyDefinitionService {
 
                 JourneyDefinition definition = JourneyDefinitionMapper.toDomain(request);
 
+                // If version is not specified, automatically assign next version
+                JourneyDefinition finalDefinition;
+                if (definition.getVersion() == null) {
+                        Integer nextVersion = getNextVersion(definition.getJourneyCode());
+                        finalDefinition = definition.toBuilder().version(nextVersion).build();
+                } else {
+                        finalDefinition = definition;
+                }
+
                 // Check if journey definition already exists
-                repository.findByJourneyCodeAndVersion(definition.getJourneyCode(),
-                                definition.getVersion()).ifPresent(existing -> {
+                repository.findByJourneyCodeAndVersion(finalDefinition.getJourneyCode(),
+                                finalDefinition.getVersion()).ifPresent(existing -> {
                                         throw new JourneyDefinitionAlreadyExistsException(
-                                                        definition.getJourneyCode() + ":"
-                                                                        + definition.getVersion());
+                                                        finalDefinition.getJourneyCode() + ":"
+                                                                        + finalDefinition
+                                                                                        .getVersion());
                                 });
 
-                repository.save(definition);
+                repository.save(finalDefinition);
 
-                return definition;
+                return finalDefinition;
+        }
+
+        /**
+         * Get the next version number for a journey code. If no versions exist, returns 1.
+         * Otherwise, returns latest version + 1.
+         */
+        private Integer getNextVersion(String journeyCode) {
+                return repository.findLatestVersion(journeyCode)
+                                .map(latest -> latest.getVersion() + 1).orElse(1);
         }
 
         public List<JourneyDefinition> getJourneyDefinitionsByCode(String code) {

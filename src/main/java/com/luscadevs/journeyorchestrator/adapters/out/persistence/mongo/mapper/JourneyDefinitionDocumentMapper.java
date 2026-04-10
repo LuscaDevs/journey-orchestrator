@@ -28,7 +28,7 @@ public class JourneyDefinitionDocumentMapper {
                 document.setId(journeyDefinition.getId());
                 document.setJourneyCode(journeyDefinition.getJourneyCode());
                 document.setName(journeyDefinition.getName());
-                document.setVersion(String.valueOf(journeyDefinition.getVersion()));
+                document.setVersion(journeyDefinition.getVersion());
                 document.setActive(journeyDefinition.isActive());
 
                 // Map states using available fields
@@ -81,8 +81,7 @@ public class JourneyDefinitionDocumentMapper {
 
                 JourneyDefinition.JourneyDefinitionBuilder builder = JourneyDefinition.builder()
                                 .id(document.getId()).journeyCode(document.getJourneyCode())
-                                .name(document.getName())
-                                .version(Integer.parseInt(document.getVersion()))
+                                .name(document.getName()).version(document.getVersion())
                                 .active(document.isActive());
 
                 // Map states using available fields

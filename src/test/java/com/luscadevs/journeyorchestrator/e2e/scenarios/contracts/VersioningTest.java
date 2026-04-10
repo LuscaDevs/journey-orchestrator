@@ -25,9 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * E2E Versioning Tests for Journey Orchestrator.
- * Validates API versioning, backward compatibility, and version handling.
- * Ensures that multiple versions of journeys can coexist and are properly
+ * E2E Versioning Tests for Journey Orchestrator. Validates API versioning, backward compatibility,
+ * and version handling. Ensures that multiple versions of journeys can coexist and are properly
  * managed.
  */
 @Tag("contract")
@@ -64,9 +63,8 @@ public class VersioningTest extends RestAssuredTestBase {
     }
 
     /**
-     * Given: Multiple versions of the same journey definition exist
-     * When: Client uses specific version code
-     * Then: System should return the correct version
+     * Given: Multiple versions of the same journey definition exist When: Client uses specific
+     * version code Then: System should return the correct version
      */
     @Test
     @DisplayName("Should allow multiple versions of the same journey")
@@ -86,21 +84,20 @@ public class VersioningTest extends RestAssuredTestBase {
         int journeyVersion = journeyResponse.getVersion();
 
         // Create instance with specific version
-        var instanceResponse = apiClient.startJourney(journeyCode, journeyVersion, Map.of("test", "data"))
-                .assertStarted();
+        var instanceResponse = apiClient
+                .startJourney(journeyCode, journeyVersion, Map.of("test", "data")).assertStarted();
 
         // Retrieve instance and verify journey code and version are tracked
-        var retrievedInstance = apiClient.getJourneyInstance(instanceResponse.getInstanceId())
-                .assertStarted();
+        var retrievedInstance =
+                apiClient.getJourneyInstance(instanceResponse.getInstanceId()).assertStarted();
 
         assertThat(retrievedInstance.getJourneyCode()).isEqualTo(journeyCode);
         assertThat(retrievedInstance.getVersion()).isEqualTo(journeyVersion);
     }
 
     /**
-     * Given: Journey version is explicitly specified in instance creation request
-     * When: Instance is created with specified version
-     * Then: Instance should be created successfully
+     * Given: Journey version is explicitly specified in instance creation request When: Instance is
+     * created with specified version Then: Instance should be created successfully
      */
     @Test
     @DisplayName("Should enforce version validation on instance creation")
@@ -110,8 +107,7 @@ public class VersioningTest extends RestAssuredTestBase {
         int validVersion = journeyResponse.getVersion();
 
         // Create instance with valid version - should succeed
-        var successResponse = apiClient.startJourney(journeyCode, validVersion)
-                .assertStarted();
+        var successResponse = apiClient.startJourney(journeyCode, validVersion).assertStarted();
         assertThat(successResponse.getRawResponse().statusCode()).isIn(200, 201);
 
         // Try to create instance with invalid version - should fail
@@ -120,9 +116,8 @@ public class VersioningTest extends RestAssuredTestBase {
     }
 
     /**
-     * Given: Client requests event processing on instance with specific version
-     * When: Event is sent to instance
-     * Then: Event should be processed according to that version's rules
+     * Given: Client requests event processing on instance with specific version When: Event is sent
+     * to instance Then: Event should be processed according to that version's rules
      */
     @Test
     @DisplayName("Should process events according to journey version")
@@ -131,40 +126,57 @@ public class VersioningTest extends RestAssuredTestBase {
         String journeyCode = journeyResponse.getJourneyCode();
         int journeyVersion = journeyResponse.getVersion();
 
-        var instanceResponse = apiClient.startJourney(journeyCode, journeyVersion)
-                .assertStarted();
+        var instanceResponse = apiClient.startJourney(journeyCode, journeyVersion).assertStarted();
         String instanceId = instanceResponse.getInstanceId();
 
         // Send event - should be processed according to journey version
-        var eventResponse = apiClient.sendEvent(instanceId, "COMPLETE", Map.of("amount", 1000.0, "currency", "USD"))
+        var eventResponse = apiClient
+                .sendEvent(instanceId, "COMPLETE", Map.of("amount", 1000.0, "currency", "USD"))
                 .assertProcessed();
 
         assertThat(eventResponse.getRawResponse().statusCode()).isIn(200, 202);
     }
 
     /**
-     * Given: Instance was created with one journey version
-     * When: New version of same journey is created
-     * Then: Existing instance should continue with original version
+     * Given: Instance was created with one journey version When: New version of same journey is
+     * created Then: Existing instance should continue with original version
      */
     @Test
     @DisplayName("Should isolate instances from new journey versions")
     void shouldIsolateInstancesFromNewVersions() {
-        // Create and use version 1
+        // 1. Create version 1
         var v1Response = apiClient.createSimpleJourney().assertSuccess();
         String journeyCode = v1Response.getJourneyCode();
         int version1 = v1Response.getVersion();
 
-        var instance1 = apiClient.startJourney(journeyCode, version1)
+        // 2. Start instance with v1
+        var instance1 = apiClient.startJourney(journeyCode, version1, Map.of("test", "data"))
                 .assertStarted();
         String instance1Id = instance1.getInstanceId();
 
-        // Version 1 instance should still work
-        var retrievedInstance = apiClient.getJourneyInstance(instance1Id)
-                .assertStarted();
+        // 3. Create version 2 (same journey code, different version)
+        Map<String, Object> v2Journey = new HashMap<>(JourneyDefinitionFixtures.simpleJourney());
+        v2Journey.put("journeyCode", journeyCode);
+        v2Journey.put("version", 2);
+        v2Journey.put("name", "Updated Journey v2");
+
+        var v2Response = apiClient.createJourneyDefinition(v2Journey).assertSuccess();
+        int version2 = v2Response.getVersion();
+
+        // 4. Continue execution of instance1 - should still use v1
+        apiClient.sendEvent(instance1Id, "COMPLETE", Map.of("amount", 1000.0)).assertProcessed();
+
+        // 5. Verify instance1 still uses v1
+        var retrievedInstance = apiClient.getJourneyInstance(instance1Id).assertStarted();
 
         assertThat(retrievedInstance.getVersion()).isEqualTo(version1);
         assertThat(retrievedInstance.getJourneyCode()).isEqualTo(journeyCode);
+        assertThat(version2).isEqualTo(2); // v2 was created successfully
+
+        // 6. New instance can use v2
+        var instance2 =
+                apiClient.startJourney(journeyCode, version2, Map.of("test", "v2")).assertStarted();
+        assertThat(instance2.getVersion()).isEqualTo(version2);
     }
 
     @DisplayName("Should maintain and track journey version history")
@@ -180,7 +192,8 @@ public class VersioningTest extends RestAssuredTestBase {
         assertThat(version1).isGreaterThanOrEqualTo(1);
 
         // Create updated version
-        Map<String, Object> v2Journey = new HashMap<>(JourneyDefinitionFixtures.conditionalJourney());
+        Map<String, Object> v2Journey =
+                new HashMap<>(JourneyDefinitionFixtures.conditionalJourney());
         v2Journey.put("journeyCode", uniqueJourneyCode);
 
         var response2 = apiClient.createJourneyDefinition(v2Journey).assertSuccess();

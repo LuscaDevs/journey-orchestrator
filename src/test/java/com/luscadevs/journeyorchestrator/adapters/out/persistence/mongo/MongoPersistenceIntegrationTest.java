@@ -20,8 +20,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration test for MongoDB persistence layer.
- * Tests actual MongoDB operations using test profile.
+ * Integration test for MongoDB persistence layer. Tests actual MongoDB operations using test
+ * profile.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -51,20 +51,20 @@ class MongoPersistenceIntegrationTest {
         document.setJourneyCode("TEST_JOURNEY");
         document.setName("Test Journey");
         document.setDescription("A test journey for integration testing");
-        document.setVersion("1.0");
+        document.setVersion(1);
         document.setActive(true);
 
         // When
         JourneyDefinitionDocument saved = journeyDefinitionRepository.save(document);
-        Optional<JourneyDefinitionDocument> found = journeyDefinitionRepository
-                .findByJourneyCodeAndVersion("TEST_JOURNEY", "1.0");
+        Optional<JourneyDefinitionDocument> found =
+                journeyDefinitionRepository.findByJourneyCodeAndVersion("TEST_JOURNEY", 1);
 
         // Then
         assertNotNull(saved.getId());
         assertTrue(found.isPresent());
         assertEquals("TEST_JOURNEY", found.get().getJourneyCode());
         assertEquals("Test Journey", found.get().getName());
-        assertEquals("1.0", found.get().getVersion());
+        assertEquals(1, found.get().getVersion());
         assertTrue(found.get().isActive());
     }
 
@@ -111,8 +111,10 @@ class MongoPersistenceIntegrationTest {
         journeyInstanceRepository.save(instance2);
 
         // When
-        List<JourneyInstanceDocument> runningInstances = journeyInstanceRepository.findByStatus("RUNNING");
-        List<JourneyInstanceDocument> completedInstances = journeyInstanceRepository.findByStatus("COMPLETED");
+        List<JourneyInstanceDocument> runningInstances =
+                journeyInstanceRepository.findByStatus("RUNNING");
+        List<JourneyInstanceDocument> completedInstances =
+                journeyInstanceRepository.findByStatus("COMPLETED");
 
         // Then
         assertEquals(1, runningInstances.size());
@@ -144,8 +146,8 @@ class MongoPersistenceIntegrationTest {
         journeyInstanceRepository.save(instance2);
 
         // When
-        List<JourneyInstanceDocument> foundInstances = journeyInstanceRepository
-                .findByJourneyDefinitionId(journeyDefId);
+        List<JourneyInstanceDocument> foundInstances =
+                journeyInstanceRepository.findByJourneyDefinitionId(journeyDefId);
 
         // Then
         assertEquals(1, foundInstances.size());

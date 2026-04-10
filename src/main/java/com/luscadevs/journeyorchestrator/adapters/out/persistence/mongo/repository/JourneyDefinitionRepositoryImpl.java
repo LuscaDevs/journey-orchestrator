@@ -31,31 +31,37 @@ public class JourneyDefinitionRepositoryImpl implements JourneyDefinitionReposit
     }
 
     @Override
-    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String journeyCode, Integer version) {
+    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String journeyCode,
+            Integer version) {
         if (journeyCode == null || version == null) {
             return Optional.empty();
         }
-        return mongoJourneyDefinitionRepository
-                .findByJourneyCodeAndVersion(journeyCode, version.toString())
+        return mongoJourneyDefinitionRepository.findByJourneyCodeAndVersion(journeyCode, version)
                 .map(mapper::toDomain);
     }
 
     @Override
+    public Optional<JourneyDefinition> findLatestVersion(String journeyCode) {
+        if (journeyCode == null) {
+            return Optional.empty();
+        }
+        return mongoJourneyDefinitionRepository
+                .findFirstByJourneyCodeOrderByVersionDesc(journeyCode).map(mapper::toDomain);
+    }
+
+    @Override
     public Optional<List<JourneyDefinition>> findByCode(String code) {
-        List<JourneyDefinitionDocument> documents = mongoJourneyDefinitionRepository.findByJourneyCode(code);
+        List<JourneyDefinitionDocument> documents =
+                mongoJourneyDefinitionRepository.findByJourneyCode(code);
         if (documents.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(documents.stream()
-                .map(mapper::toDomain)
-                .toList());
+        return Optional.of(documents.stream().map(mapper::toDomain).toList());
     }
 
     @Override
     public List<JourneyDefinition> findAll() {
-        return mongoJourneyDefinitionRepository.findAll().stream()
-                .map(mapper::toDomain)
-                .toList();
+        return mongoJourneyDefinitionRepository.findAll().stream().map(mapper::toDomain).toList();
     }
 
     @Override
