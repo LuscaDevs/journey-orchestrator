@@ -92,6 +92,10 @@ public class JourneyDefinitionValidator {
         Set<String> stateNames = new HashSet<>();
         Set<String> duplicateNames = new HashSet<>();
 
+        // Verificar IDs duplicados
+        Set<java.util.UUID> stateIds = new HashSet<>();
+        Set<java.util.UUID> duplicateIds = new HashSet<>();
+
         for (State state : states) {
             if (state.getName() == null || state.getName().trim().isEmpty()) {
                 errors.add(ValidationError.ofInvalidBasicField("states",
@@ -107,11 +111,27 @@ public class JourneyDefinitionValidator {
             if (state.getType() == null) {
                 errors.add(ValidationError.ofInvalidStateType(state.getName()));
             }
+
+            // Validar duplicidade de ID (se fornecido)
+            if (state.getId() != null) {
+                if (!stateIds.add(state.getId())) {
+                    duplicateIds.add(state.getId());
+                }
+            }
         }
 
-        // Reportar duplicatas
+        // Reportar duplicatas de nome
         for (String duplicate : duplicateNames) {
             errors.add(ValidationError.ofDuplicateState(duplicate));
+        }
+
+        // Reportar duplicatas de ID
+        for (java.util.UUID duplicate : duplicateIds) {
+            errors.add(
+                    ValidationError.builder().code("DUPLICATE_STATE_ID")
+                            .message("Duplicate state ID: " + duplicate
+                                    + ". Each state must have a unique ID.")
+                            .field("states").build());
         }
 
         // Validar que há exatamente um estado inicial
@@ -139,9 +159,14 @@ public class JourneyDefinitionValidator {
 
         // Criar mapa de estados para busca rápida
         Map<String, State> stateMap = new HashMap<>();
+        Map<java.util.UUID, State> stateIdMap = new HashMap<>();
+
         for (State state : states) {
             if (state.getName() != null) {
                 stateMap.put(state.getName(), state);
+            }
+            if (state.getId() != null) {
+                stateIdMap.put(state.getId(), state);
             }
         }
 
@@ -152,24 +177,53 @@ public class JourneyDefinitionValidator {
         for (int i = 0; i < transitions.size(); i++) {
             Transition transition = transitions.get(i);
 
-            // Validar estado de origem
-            if (transition.getSourceState() == null
-                    || transition.getSourceState().getName() == null) {
-                errors.add(ValidationError.ofInvalidTransitionReference(i,
-                        "source state cannot be null"));
-            } else if (!stateMap.containsKey(transition.getSourceState().getName())) {
-                errors.add(ValidationError.ofInvalidTransitionReference(i, "source state '"
-                        + transition.getSourceState().getName() + "' does not exist"));
+            // Validar estado de origem (name-based)
+            if (transition.getSourceState() != null
+                    && transition.getSourceState().getName() != null) {
+                if (!stateMap.containsKey(transition.getSourceState().getName())) {
+                    errors.add(ValidationError.ofInvalidTransitionReference(i, "source state '"
+                            + transition.getSourceState().getName() + "' does not exist"));
+                }
             }
 
-            // Validar estado de destino
-            if (transition.getTargetState() == null
-                    || transition.getTargetState().getName() == null) {
+            // Validar estado de origem (ID-based)
+            if (transition.getSourceStateId() != null) {
+                if (!stateIdMap.containsKey(transition.getSourceStateId())) {
+                    errors.add(ValidationError.ofInvalidTransitionReference(i, "source state ID '"
+                            + transition.getSourceStateId() + "' does not exist"));
+                }
+            }
+
+            // Validar estado de destino (name-based)
+            if (transition.getTargetState() != null
+                    && transition.getTargetState().getName() != null) {
+                if (!stateMap.containsKey(transition.getTargetState().getName())) {
+                    errors.add(ValidationError.ofInvalidTransitionReference(i, "target state '"
+                            + transition.getTargetState().getName() + "' does not exist"));
+                }
+            }
+
+            // Validar estado de destino (ID-based)
+            if (transition.getTargetStateId() != null) {
+                if (!stateIdMap.containsKey(transition.getTargetStateId())) {
+                    errors.add(ValidationError.ofInvalidTransitionReference(i, "target state ID '"
+                            + transition.getTargetStateId() + "' does not exist"));
+                }
+            }
+
+            // Validar que pelo menos uma referência está presente
+            if ((transition.getSourceState() == null
+                    || transition.getSourceState().getName() == null)
+                    && transition.getSourceStateId() == null) {
                 errors.add(ValidationError.ofInvalidTransitionReference(i,
-                        "target state cannot be null"));
-            } else if (!stateMap.containsKey(transition.getTargetState().getName())) {
-                errors.add(ValidationError.ofInvalidTransitionReference(i, "target state '"
-                        + transition.getTargetState().getName() + "' does not exist"));
+                        "source state reference missing (provide either source or sourceStateId)"));
+            }
+
+            if ((transition.getTargetState() == null
+                    || transition.getTargetState().getName() == null)
+                    && transition.getTargetStateId() == null) {
+                errors.add(ValidationError.ofInvalidTransitionReference(i,
+                        "target state reference missing (provide either target or targetStateId)"));
             }
 
             // Validar evento
@@ -240,12 +294,12 @@ public class JourneyDefinitionValidator {
         }
 
         // Verificar se o estado inicial está na lista de estados
-        boolean initialStateExists = states.stream()
-                .anyMatch(s -> initialState.getName().equals(s.getName()));
+        boolean initialStateExists =
+                states.stream().anyMatch(s -> initialState.getName().equals(s.getName()));
 
         if (!initialStateExists) {
-            errors.add(ValidationError.ofInvalidInitialState(
-                    "Initial state '" + initialState.getName() + "' must be included in states list"));
+            errors.add(ValidationError.ofInvalidInitialState("Initial state '"
+                    + initialState.getName() + "' must be included in states list"));
         }
 
         // Verificar se o estado inicial é do tipo INITIAL
@@ -266,8 +320,7 @@ public class JourneyDefinitionValidator {
         List<Transition> transitions = definition.getTransitions();
 
         // Verificar se há pelo menos um estado final
-        List<State> finalStates = states.stream()
-                .filter(s -> StateType.FINAL.equals(s.getType()))
+        List<State> finalStates = states.stream().filter(s -> StateType.FINAL.equals(s.getType()))
                 .collect(Collectors.toList());
 
         if (finalStates.isEmpty()) {
@@ -276,14 +329,14 @@ public class JourneyDefinitionValidator {
 
         // Verificar se estados finais têm transições de saída (recomendado)
         if (transitions != null) {
-            Set<String> finalStateNames = finalStates.stream()
-                    .map(State::getName)
-                    .collect(Collectors.toSet());
+            Set<String> finalStateNames =
+                    finalStates.stream().map(State::getName).collect(Collectors.toSet());
 
             for (Transition transition : transitions) {
-                if (transition.getSourceState() != null && 
-                    finalStateNames.contains(transition.getSourceState().getName())) {
-                    errors.add(ValidationError.ofFinalStateWithOutgoing(transition.getSourceState().getName()));
+                if (transition.getSourceState() != null
+                        && finalStateNames.contains(transition.getSourceState().getName())) {
+                    errors.add(ValidationError
+                            .ofFinalStateWithOutgoing(transition.getSourceState().getName()));
                 }
             }
         }
@@ -373,7 +426,8 @@ public class JourneyDefinitionValidator {
 
                 // Validação básica: verificar caracteres básicos
                 if (condition.contains("/*") || condition.contains("*/")) {
-                    errors.add(ValidationError.ofInvalidCondition(i, "condition contains invalid characters"));
+                    errors.add(ValidationError.ofInvalidCondition(i,
+                            "condition contains invalid characters"));
                 }
             }
         }

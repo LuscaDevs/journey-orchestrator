@@ -6,17 +6,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.math.BigDecimal;
 
+/**
+ * Position value object for visual editor integration. Represents x,y coordinates for graph
+ * rendering.
+ */
 @Builder
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = "name")
-public class State {
+@EqualsAndHashCode
+public class Position {
 
-    private UUID id; // Unique identifier for the state
-    private String name;
-    private StateType type;
-    private Position position; // Visual editor position data (optional)
+    private BigDecimal x;
+    private BigDecimal y;
 }
