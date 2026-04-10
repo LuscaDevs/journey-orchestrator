@@ -63,38 +63,70 @@ public class JourneyInstanceService {
         }
 
         public JourneyInstance applyEvent(String instanceId, Event event, Object eventData) {
-                JourneyInstance instance = journeyInstanceRepository.findById(instanceId)
-                                .orElseThrow(() -> new JourneyInstanceNotFoundException(
-                                                instanceId));
+                int maxRetries = 3;
 
-                // Validar status antes de buscar definição (otimização e mantém comportamento
-                // esperado)
-                instance.ensureCanReceiveEvents();
+                for (int attempt = 1; attempt <= maxRetries; attempt++) {
+                        try {
+                                // 1. Carregar instância (re-carregar a cada tentativa)
+                                JourneyInstance instance = journeyInstanceRepository
+                                                .findById(instanceId)
+                                                .orElseThrow(() -> new JourneyInstanceNotFoundException(
+                                                                instanceId));
 
-                JourneyDefinition definition = journeyDefinitionRepository
-                                .findByJourneyCodeAndVersion(instance.getJourneyDefinitionId(),
-                                                instance.getJourneyVersion())
-                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(
-                                                instance.getJourneyDefinitionId() + ":"
-                                                                + instance.getJourneyVersion()));
+                                // Validar status antes de buscar definição (otimização e mantém
+                                // comportamento
+                                // esperado)
+                                instance.ensureCanReceiveEvents();
 
-                State previousState = instance.getCurrentState();
+                                JourneyDefinition definition = journeyDefinitionRepository
+                                                .findByJourneyCodeAndVersion(
+                                                                instance.getJourneyDefinitionId(),
+                                                                instance.getJourneyVersion())
+                                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(
+                                                                instance.getJourneyDefinitionId()
+                                                                                + ":"
+                                                                                + instance.getJourneyVersion()));
 
-                // Delegar para a entidade - validação e lógica de negócio estão no domínio
-                journeyEngine.applyEvent(instance, definition, event, eventData);
+                                State previousState = instance.getCurrentState();
 
-                JourneyInstance savedInstance = journeyInstanceRepository.save(instance);
+                                // Delegar para a entidade - validação e lógica de negócio estão no
+                                // domínio
+                                journeyEngine.applyEvent(instance, definition, event, eventData);
 
-                // Record transition history after successful state change
-                State newState = savedInstance.getCurrentState();
-                if (!previousState.equals(newState)) {
-                        transitionHistoryService.recordTransition(instanceId, previousState,
-                                        newState, event,
-                                        Map.of("journeyCode", instance.getJourneyDefinitionId(),
-                                                        "version", instance.getJourneyVersion()));
+                                JourneyInstance savedInstance =
+                                                journeyInstanceRepository.save(instance);
+
+                                // Record transition history after successful state change
+                                State newState = savedInstance.getCurrentState();
+                                if (!previousState.equals(newState)) {
+                                        transitionHistoryService.recordTransition(instanceId,
+                                                        previousState, newState, event,
+                                                        Map.of("journeyCode", instance
+                                                                        .getJourneyDefinitionId(),
+                                                                        "version",
+                                                                        instance.getJourneyVersion()));
+                                }
+
+                                return savedInstance;
+
+                        } catch (java.util.ConcurrentModificationException e) {
+                                if (attempt == maxRetries) {
+                                        throw new RuntimeException("Failed to apply event after "
+                                                        + maxRetries
+                                                        + " attempts due to concurrent modification",
+                                                        e);
+                                }
+                                // Pequeno delay antes de retry (exponential backoff simples)
+                                try {
+                                        Thread.sleep(50 * attempt); // 50ms, 100ms, 150ms
+                                } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        throw new RuntimeException("Interrupted during retry", ie);
+                                }
+                        }
                 }
 
-                return savedInstance;
+                throw new RuntimeException("Unexpected error in applyEvent retry logic");
         }
 
         public JourneyInstance getInstance(String instanceId) {

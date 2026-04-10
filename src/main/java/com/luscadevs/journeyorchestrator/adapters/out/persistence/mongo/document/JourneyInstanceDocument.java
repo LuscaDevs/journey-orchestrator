@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.Version;
 
 import java.util.Map;
 
@@ -35,4 +36,7 @@ public class JourneyInstanceDocument extends BaseDocument {
     private String completedAt;
 
     private String lastActivityAt;
+
+    @Version
+    private Long version;
 }
