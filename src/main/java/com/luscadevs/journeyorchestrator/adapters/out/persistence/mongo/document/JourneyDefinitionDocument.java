@@ -25,7 +25,7 @@ public class JourneyDefinitionDocument extends BaseDocument {
 
     private String description;
 
-    private String version;
+    private Integer version;
 
     private boolean active;
 

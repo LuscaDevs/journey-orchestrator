@@ -11,15 +11,23 @@ import java.util.Optional;
  * Spring Data MongoDB repository for JourneyDefinitionDocument.
  */
 @Repository
-public interface MongoJourneyDefinitionRepository extends MongoRepository<JourneyDefinitionDocument, String> {
+public interface MongoJourneyDefinitionRepository
+        extends MongoRepository<JourneyDefinitionDocument, String> {
 
     /**
      * Find journey definition by journey code and version.
      */
-    Optional<JourneyDefinitionDocument> findByJourneyCodeAndVersion(String journeyCode, String version);
+    Optional<JourneyDefinitionDocument> findByJourneyCodeAndVersion(String journeyCode,
+            Integer version);
 
     /**
      * Find all journey definitions by journey code.
      */
     List<JourneyDefinitionDocument> findByJourneyCode(String journeyCode);
+
+    /**
+     * Find latest journey definition by journey code (highest version).
+     */
+    Optional<JourneyDefinitionDocument> findFirstByJourneyCodeOrderByVersionDesc(
+            String journeyCode);
 }

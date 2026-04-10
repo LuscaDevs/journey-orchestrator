@@ -16,23 +16,30 @@ public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRep
     private final Map<String, JourneyDefinition> storage = new HashMap<>();
 
     @Override
-    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String journeyCode, Integer version) {
+    public Optional<JourneyDefinition> findByJourneyCodeAndVersion(String journeyCode,
+            Integer version) {
         return Optional.ofNullable(storage.get(key(journeyCode, version)));
+    }
+
+    @Override
+    public Optional<JourneyDefinition> findLatestVersion(String journeyCode) {
+        return storage.values().stream()
+                .filter(journeyDefinition -> journeyDefinition.getJourneyCode() != null
+                        && journeyDefinition.getJourneyCode().equals(journeyCode))
+                .max((j1, j2) -> Integer.compare(j1.getVersion(), j2.getVersion()));
     }
 
     @Override
     public JourneyDefinition save(JourneyDefinition journeyDefinition) {
         if (journeyDefinition.getId() == null) {
             journeyDefinition = journeyDefinition.toBuilder()
-                    .id(java.util.UUID.randomUUID().toString())
-                    .build();
+                    .id(java.util.UUID.randomUUID().toString()).build();
         }
         if (journeyDefinition.getCreatedAt() == null) {
-            journeyDefinition = journeyDefinition.toBuilder()
-                    .createdAt(Instant.now())
-                    .build();
+            journeyDefinition = journeyDefinition.toBuilder().createdAt(Instant.now()).build();
         }
-        storage.put(key(journeyDefinition.getJourneyCode(), journeyDefinition.getVersion()), journeyDefinition);
+        storage.put(key(journeyDefinition.getJourneyCode(), journeyDefinition.getVersion()),
+                journeyDefinition);
         return journeyDefinition;
     }
 
