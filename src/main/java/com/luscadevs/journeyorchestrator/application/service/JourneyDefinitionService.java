@@ -10,6 +10,7 @@ import com.luscadevs.journeyorchestrator.application.port.out.JourneyDefinitionR
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlreadyExistsException;
+import com.luscadevs.journeyorchestrator.domain.validation.JourneyDefinitionValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class JourneyDefinitionService {
 
         private final JourneyDefinitionRepositoryPort repository;
+        private final JourneyDefinitionValidator validator;
 
         public JourneyDefinition createJourneyDefinition(CreateJourneyDefinitionRequest request) {
 
@@ -31,6 +33,9 @@ public class JourneyDefinitionService {
                 } else {
                         finalDefinition = definition;
                 }
+
+                // Validate DSL structure before saving
+                validator.validate(finalDefinition);
 
                 // Check if journey definition already exists
                 repository.findByJourneyCodeAndVersion(finalDefinition.getJourneyCode(),
