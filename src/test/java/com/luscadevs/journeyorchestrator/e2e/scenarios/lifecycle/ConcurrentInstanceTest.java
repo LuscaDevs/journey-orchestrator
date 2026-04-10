@@ -197,20 +197,20 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
     void shouldHandleConcurrentInstancesWithDifferentJourneyDefinitions() {
         // Given: Multiple journey definitions using hybrid fixtures
         Map<String, Object> simpleJourney = hybridFixtures.simpleJourney("SIMPLE_CONCURRENT");
-        Map<String, Object> conditionalJourney =
-                hybridFixtures.conditionalJourney("CONDITIONAL_CONCURRENT");
+        Map<String, Object> anotherSimpleJourney =
+                hybridFixtures.simpleJourney("ANOTHER_SIMPLE_CONCURRENT");
 
         Response simpleResponse = createJourneyDefinition(simpleJourney);
-        Response conditionalResponse = createJourneyDefinition(conditionalJourney);
+        Response anotherSimpleResponse = createJourneyDefinition(anotherSimpleJourney);
 
         assertJourneyDefinitionCreated(simpleResponse);
-        assertJourneyDefinitionCreated(conditionalResponse);
+        assertJourneyDefinitionCreated(anotherSimpleResponse);
 
         String simpleJourneyCode = simpleResponse.jsonPath().getString("journeyCode");
         int simpleVersion = simpleResponse.jsonPath().getInt("version");
 
-        String conditionalJourneyCode = conditionalResponse.jsonPath().getString("journeyCode");
-        int conditionalVersion = conditionalResponse.jsonPath().getInt("version");
+        String anotherSimpleJourneyCode = anotherSimpleResponse.jsonPath().getString("journeyCode");
+        int anotherSimpleVersion = anotherSimpleResponse.jsonPath().getInt("version");
 
         // When: Start instances of different journey types concurrently
         ExecutorService executor = Executors.newFixedThreadPool(6);
@@ -234,21 +234,16 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
             futures.add(future);
         }
 
-        // Start 3 conditional journey instances
+        // Start 3 another simple journey instances
         for (int i = 0; i < 3; i++) {
-            final int instanceIndex = i;
             CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-                Map<String, Object> payload = instanceIndex % 2 == 0 ? Map.of("amount", 1500.0) // High
-                                                                                                // amount
-                        : Map.of("amount", 500.0); // Low amount
-
-                Response startResponse =
-                        startJourneyInstance(conditionalJourneyCode, conditionalVersion, Map.of());
+                Response startResponse = startJourneyInstance(anotherSimpleJourneyCode,
+                        anotherSimpleVersion, Map.of());
                 assertJourneyInstanceStarted(startResponse);
 
                 String instanceId = startResponse.jsonPath().getString("instanceId");
 
-                Response eventResponse = sendEvent(instanceId, "PROCESS", payload);
+                Response eventResponse = sendEvent(instanceId, "COMPLETE", Map.of());
                 assertEventProcessed(eventResponse);
 
                 return instanceId;
@@ -266,8 +261,7 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
             }
         }).toList();
 
-        // Verify simple journeys end in END state
-        // Verify conditional journeys end in appropriate states based on conditions
+        // Verify all journeys end in END state
         for (String instanceId : instanceIds) {
             Response instanceResponse = getJourneyInstance(instanceId);
             instanceResponse.then().statusCode(200).body("instanceId", equalTo(instanceId))

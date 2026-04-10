@@ -52,7 +52,7 @@ public class ConditionalTransitionTest extends RestAssuredTestBase {
         void shouldFollowCorrectPathBasedOnConditions() {
                 // Given: A journey with conditional transitions using hybrid fixtures
                 Map<String, Object> journeyDefinition =
-                                hybridFixtures.conditionalJourney("HIGH_VALUE_TEST");
+                                hybridFixtures.conditionalJourney("conditional-journey");
                 Response createResponse = createJourneyDefinition(journeyDefinition);
                 assertJourneyDefinitionCreated(createResponse);
 

@@ -8,6 +8,7 @@ import com.luscadevs.journeyorchestrator.domain.exception.JourneyInstanceNotFoun
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidStateTransitionException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyAlreadyCompletedException;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntaxException;
+import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -260,8 +261,42 @@ public class GlobalExceptionHandler {
         }
 
         /**
+         * Handles JourneyDefinitionValidationException with specific logging.
+         *
+         * @param ex The exception that occurred
+         * @param request The HTTP request for context
+         * @return ResponseEntity with ProblemDetail and HTTP 422 status
+         */
+        @ExceptionHandler(JourneyDefinitionValidationException.class)
+        public ResponseEntity<ProblemDetail> handleJourneyDefinitionValidationException(
+                        JourneyDefinitionValidationException ex, HttpServletRequest request) {
+
+                String correlationId = getOrCreateCorrelationId(request);
+                MDC.put(CORRELATION_ID_MDC_KEY, correlationId);
+                MDC.put("requestPath", request.getRequestURI());
+                MDC.put("httpMethod", request.getMethod());
+
+                log.warn("Journey definition validation failed: {} | Path: {} | CorrelationId: {}",
+                                ex.getMessage(), request.getRequestURI(), correlationId);
+
+                ProblemDetail problemDetail = ProblemDetail
+                                .forStatusAndDetail(HttpStatus.valueOf(422), ex.getMessage());
+
+                problemDetail.setTitle("Validation Error");
+                problemDetail.setType(URI.create(
+                                "https://api.journey-orchestrator.com/errors/validation_001"));
+                problemDetail.setProperty("errorCode", "VALIDATION_001");
+                problemDetail.setProperty("timestamp", java.time.Instant.now().toString());
+                problemDetail.setProperty("path", request.getRequestURI());
+
+                clearLoggingContext();
+
+                return ResponseEntity.status(HttpStatus.valueOf(422)).body(problemDetail);
+        }
+
+        /**
          * Handles unexpected exceptions and returns a generic error response.
-         * 
+         *
          * @param ex The unexpected exception
          * @param request The HTTP request for context
          * @return ResponseEntity with generic error information
