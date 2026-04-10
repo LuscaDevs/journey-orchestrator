@@ -255,12 +255,13 @@ public class ConcurrentInstanceModificationTest {
     }
 
     private JourneyDefinitionDocument.StateDocument createState(String name, String type) {
-        return new JourneyDefinitionDocument.StateDocument(name, type);
+        return new JourneyDefinitionDocument.StateDocument(null, name, type, null);
     }
 
     private JourneyDefinitionDocument.TransitionDocument createTransition(String from, String to,
             String event) {
-        return new JourneyDefinitionDocument.TransitionDocument(null, from, to, event, null, null);
+        return new JourneyDefinitionDocument.TransitionDocument(null, from, to, null, null, event,
+                null, null);
     }
 
     private JourneyInstance createInitialInstance() {

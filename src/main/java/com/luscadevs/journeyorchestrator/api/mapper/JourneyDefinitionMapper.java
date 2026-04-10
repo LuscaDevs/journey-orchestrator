@@ -51,7 +51,22 @@ public final class JourneyDefinitionMapper {
                                 }
                         }
 
-                        return State.builder().name(s.getName()).type(domainType).build();
+                        // Map position if provided
+                        com.luscadevs.journeyorchestrator.domain.journey.Position position = null;
+                        if (s.getPosition() != null) {
+                                position = com.luscadevs.journeyorchestrator.domain.journey.Position
+                                                .builder().x(s.getPosition().getX())
+                                                .y(s.getPosition().getY()).build();
+                        }
+
+                        // Auto-generate UUID if not provided
+                        java.util.UUID stateId = s.getId();
+                        if (stateId == null) {
+                                stateId = java.util.UUID.randomUUID();
+                        }
+
+                        return State.builder().id(stateId).name(s.getName()).type(domainType)
+                                        .position(position).build();
                 }).toList();
 
                 // 2️⃣ Criar mapa para lookup rápido
@@ -76,22 +91,113 @@ public final class JourneyDefinitionMapper {
 
         private static Transition mapTransition(TransitionRequest t, Map<String, State> stateMap) {
 
-                State source = stateMap.get(t.getSource());
-                State target = stateMap.get(t.getTarget());
+                State source = null;
+                State target = null;
 
-                if (source == null) {
+                // Resolve source state - prefer ID if provided, otherwise use name
+                if (t.getSourceStateId() != null && t.getSource() != null) {
+                        // Both ID and name provided - validate they point to the same state
+                        State idBasedSource = stateMap.values().stream()
+                                        .filter(s -> t.getSourceStateId().equals(s.getId()))
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Source state with ID '"
+                                                                        + t.getSourceStateId()
+                                                                        + "' not found"));
+
+                        State nameBasedSource = stateMap.get(t.getSource());
+                        if (nameBasedSource == null) {
+                                throw new IllegalArgumentException(
+                                                "Source state '" + t.getSource() + "' not found");
+                        }
+
+                        if (!idBasedSource.equals(nameBasedSource)) {
+                                throw new IllegalArgumentException("Conflict: source state ID '"
+                                                + t.getSourceStateId() + "' and name '"
+                                                + t.getSource() + "' refer to different states");
+                        }
+
+                        source = idBasedSource;
+                } else if (t.getSourceStateId() != null) {
+                        // ID-based reference only
+                        source = stateMap.values().stream()
+                                        .filter(s -> t.getSourceStateId().equals(s.getId()))
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Source state with ID '"
+                                                                        + t.getSourceStateId()
+                                                                        + "' not found"));
+                } else if (t.getSource() != null) {
+                        // Name-based reference only (legacy)
+                        source = stateMap.get(t.getSource());
+                        if (source == null) {
+                                throw new IllegalArgumentException(
+                                                "Source state '" + t.getSource() + "' not found");
+                        }
+                } else {
                         throw new IllegalArgumentException(
-                                        "Source state '" + t.getSource() + "' not found");
+                                        "Source state reference missing (provide either source or sourceStateId)");
                 }
 
-                if (target == null) {
+                // Resolve target state - prefer ID if provided, otherwise use name
+                if (t.getTargetStateId() != null && t.getTarget() != null) {
+                        // Both ID and name provided - validate they point to the same state
+                        State idBasedTarget = stateMap.values().stream()
+                                        .filter(s -> t.getTargetStateId().equals(s.getId()))
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Target state with ID '"
+                                                                        + t.getTargetStateId()
+                                                                        + "' not found"));
+
+                        State nameBasedTarget = stateMap.get(t.getTarget());
+                        if (nameBasedTarget == null) {
+                                throw new IllegalArgumentException(
+                                                "Target state '" + t.getTarget() + "' not found");
+                        }
+
+                        if (!idBasedTarget.equals(nameBasedTarget)) {
+                                throw new IllegalArgumentException("Conflict: target state ID '"
+                                                + t.getTargetStateId() + "' and name '"
+                                                + t.getTarget() + "' refer to different states");
+                        }
+
+                        target = idBasedTarget;
+                } else if (t.getTargetStateId() != null) {
+                        // ID-based reference only
+                        target = stateMap.values().stream()
+                                        .filter(s -> t.getTargetStateId().equals(s.getId()))
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Target state with ID '"
+                                                                        + t.getTargetStateId()
+                                                                        + "' not found"));
+                } else if (t.getTarget() != null) {
+                        // Name-based reference only (legacy)
+                        target = stateMap.get(t.getTarget());
+                        if (target == null) {
+                                throw new IllegalArgumentException(
+                                                "Target state '" + t.getTarget() + "' not found");
+                        }
+                } else {
                         throw new IllegalArgumentException(
-                                        "Target state '" + t.getTarget() + "' not found");
+                                        "Target state reference missing (provide either target or targetStateId)");
                 }
 
-                return Transition.builder().sourceState(source).targetState(target)
-                                .event(new Event(t.getEvent()))
-                                .condition(validateCondition(t.getCondition())).build();
+                // Build transition with resolved states
+                Transition.TransitionBuilder builder = Transition.builder().sourceState(source)
+                                .targetState(target).event(new Event(t.getEvent()))
+                                .condition(validateCondition(t.getCondition()));
+
+                // Store the ID references for persistence
+                if (t.getSourceStateId() != null) {
+                        builder.sourceStateId(t.getSourceStateId());
+                }
+                if (t.getTargetStateId() != null) {
+                        builder.targetStateId(t.getTargetStateId());
+                }
+
+                return builder.build();
         }
 
         private static String validateCondition(String condition) {
@@ -146,8 +252,25 @@ public final class JourneyDefinitionMapper {
                                                                                                 + s.getType());
                                                         }
                                                 }
-                                                return new com.luscadevs.journey.api.generated.model.State()
-                                                                .name(s.getName()).type(apiType);
+
+                                                com.luscadevs.journey.api.generated.model.State state =
+                                                                new com.luscadevs.journey.api.generated.model.State()
+                                                                                .name(s.getName())
+                                                                                .type(apiType)
+                                                                                .id(s.getId());
+
+                                                // Map position if present
+                                                if (s.getPosition() != null) {
+                                                        com.luscadevs.journey.api.generated.model.StatePosition position =
+                                                                        new com.luscadevs.journey.api.generated.model.StatePosition()
+                                                                                        .x(s.getPosition()
+                                                                                                        .getX())
+                                                                                        .y(s.getPosition()
+                                                                                                        .getY());
+                                                        state.setPosition(position);
+                                                }
+
+                                                return state;
                                         }).toList();
                         response.setStates(states);
                 } else {
@@ -158,9 +281,19 @@ public final class JourneyDefinitionMapper {
                 if (definition.getTransitions() != null) {
                         List<TransitionResponse> transitions = definition.getTransitions().stream()
                                         .map(t -> new TransitionResponse()
-                                                        .source(t.getSourceState().getName())
-                                                        .event(t.getEvent().getName())
-                                                        .target(t.getTargetState().getName())
+                                                        .source(t.getSourceState() != null
+                                                                        ? t.getSourceState()
+                                                                                        .getName()
+                                                                        : null)
+                                                        .target(t.getTargetState() != null
+                                                                        ? t.getTargetState()
+                                                                                        .getName()
+                                                                        : null)
+                                                        .sourceStateId(t.getSourceStateId())
+                                                        .targetStateId(t.getTargetStateId())
+                                                        .event(t.getEvent() != null
+                                                                        ? t.getEvent().getName()
+                                                                        : null)
                                                         .condition(t.getCondition()))
                                         .toList();
                         response.setTransitions(transitions);
