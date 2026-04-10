@@ -7,6 +7,7 @@ import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFo
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlreadyExistsException;
 import com.luscadevs.journeyorchestrator.domain.exception.ErrorCode;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
+import com.luscadevs.journeyorchestrator.domain.validation.JourneyDefinitionValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,8 +26,8 @@ import static org.mockito.Mockito.*;
 import org.mockito.MockedStatic;
 
 /**
- * Integration tests to verify that domain exceptions are properly used
- * in JourneyDefinitionService methods.
+ * Integration tests to verify that domain exceptions are properly used in JourneyDefinitionService
+ * methods.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -35,11 +36,14 @@ class JourneyDefinitionServiceIntegrationTest {
         @Mock
         private JourneyDefinitionRepositoryPort repository;
 
+        @Mock
+        private JourneyDefinitionValidator validator;
+
         private JourneyDefinitionService journeyDefinitionService;
 
         @BeforeEach
         void setUp() {
-                journeyDefinitionService = new JourneyDefinitionService(repository);
+                journeyDefinitionService = new JourneyDefinitionService(repository, validator);
         }
 
         @Test
@@ -48,15 +52,15 @@ class JourneyDefinitionServiceIntegrationTest {
                 String journeyCode = "TEST_JOURNEY";
                 Integer version = 1;
                 CreateJourneyDefinitionRequest request = new CreateJourneyDefinitionRequest()
-                                .journeyCode(journeyCode)
-                                .version(version);
+                                .journeyCode(journeyCode).version(version);
 
                 JourneyDefinition existingDefinition = mock(JourneyDefinition.class);
                 when(existingDefinition.getJourneyCode()).thenReturn(journeyCode);
                 when(existingDefinition.getVersion()).thenReturn(version);
 
                 // Mock the mapper to return a JourneyDefinition
-                try (MockedStatic<JourneyDefinitionMapper> mapperMock = mockStatic(JourneyDefinitionMapper.class)) {
+                try (MockedStatic<JourneyDefinitionMapper> mapperMock =
+                                mockStatic(JourneyDefinitionMapper.class)) {
                         JourneyDefinition newDefinition = mock(JourneyDefinition.class);
                         when(newDefinition.getJourneyCode()).thenReturn(journeyCode);
                         when(newDefinition.getVersion()).thenReturn(version);
@@ -70,10 +74,13 @@ class JourneyDefinitionServiceIntegrationTest {
                         // When & Then
                         JourneyDefinitionAlreadyExistsException exception = assertThrows(
                                         JourneyDefinitionAlreadyExistsException.class,
-                                        () -> journeyDefinitionService.createJourneyDefinition(request));
+                                        () -> journeyDefinitionService
+                                                        .createJourneyDefinition(request));
 
-                        assertEquals(journeyCode + ":" + version, exception.getJourneyDefinitionId());
-                        assertEquals(ErrorCode.JOURNEY_DEFINITION_ALREADY_EXISTS, exception.getErrorCode());
+                        assertEquals(journeyCode + ":" + version,
+                                        exception.getJourneyDefinitionId());
+                        assertEquals(ErrorCode.JOURNEY_DEFINITION_ALREADY_EXISTS,
+                                        exception.getErrorCode());
                         verify(repository).findByJourneyCodeAndVersion(journeyCode, version);
                         verify(repository, never()).save(any());
                 }
@@ -85,11 +92,11 @@ class JourneyDefinitionServiceIntegrationTest {
                 String journeyCode = "NEW_JOURNEY";
                 Integer version = 1;
                 CreateJourneyDefinitionRequest request = new CreateJourneyDefinitionRequest()
-                                .journeyCode(journeyCode)
-                                .version(version);
+                                .journeyCode(journeyCode).version(version);
 
                 // Mock the mapper to return a JourneyDefinition
-                try (MockedStatic<JourneyDefinitionMapper> mapperMock = mockStatic(JourneyDefinitionMapper.class)) {
+                try (MockedStatic<JourneyDefinitionMapper> mapperMock =
+                                mockStatic(JourneyDefinitionMapper.class)) {
                         JourneyDefinition newDefinition = mock(JourneyDefinition.class);
                         when(newDefinition.getJourneyCode()).thenReturn(journeyCode);
                         when(newDefinition.getVersion()).thenReturn(version);
@@ -105,7 +112,8 @@ class JourneyDefinitionServiceIntegrationTest {
                                         .thenReturn(savedDefinition);
 
                         // When
-                        JourneyDefinition result = journeyDefinitionService.createJourneyDefinition(request);
+                        JourneyDefinition result =
+                                        journeyDefinitionService.createJourneyDefinition(request);
 
                         // Then
                         assertNotNull(result);
@@ -119,13 +127,13 @@ class JourneyDefinitionServiceIntegrationTest {
                 // Given
                 String nonExistentCode = "NON_EXISTENT";
 
-                when(repository.findByCode(nonExistentCode))
-                                .thenReturn(Optional.empty());
+                when(repository.findByCode(nonExistentCode)).thenReturn(Optional.empty());
 
                 // When & Then
                 JourneyDefinitionNotFoundException exception = assertThrows(
                                 JourneyDefinitionNotFoundException.class,
-                                () -> journeyDefinitionService.getJourneyDefinitionsByCode(nonExistentCode));
+                                () -> journeyDefinitionService
+                                                .getJourneyDefinitionsByCode(nonExistentCode));
 
                 assertEquals(nonExistentCode, exception.getJourneyDefinitionId());
                 verify(repository).findByCode(nonExistentCode);
@@ -137,11 +145,11 @@ class JourneyDefinitionServiceIntegrationTest {
                 String existingCode = "EXISTING_CODE";
                 List<JourneyDefinition> definitions = List.of(mock(JourneyDefinition.class));
 
-                when(repository.findByCode(existingCode))
-                                .thenReturn(Optional.of(definitions));
+                when(repository.findByCode(existingCode)).thenReturn(Optional.of(definitions));
 
                 // When
-                List<JourneyDefinition> result = journeyDefinitionService.getJourneyDefinitionsByCode(existingCode);
+                List<JourneyDefinition> result =
+                                journeyDefinitionService.getJourneyDefinitionsByCode(existingCode);
 
                 // Then
                 assertNotNull(result);
@@ -161,7 +169,8 @@ class JourneyDefinitionServiceIntegrationTest {
                 // When & Then
                 JourneyDefinitionNotFoundException exception = assertThrows(
                                 JourneyDefinitionNotFoundException.class,
-                                () -> journeyDefinitionService.getJourneyDefinition(journeyCode, version));
+                                () -> journeyDefinitionService.getJourneyDefinition(journeyCode,
+                                                version));
 
                 assertEquals(journeyCode + ":" + version, exception.getJourneyDefinitionId());
                 verify(repository).findByJourneyCodeAndVersion(journeyCode, version);
@@ -178,7 +187,8 @@ class JourneyDefinitionServiceIntegrationTest {
                                 .thenReturn(Optional.of(definition));
 
                 // When
-                JourneyDefinition result = journeyDefinitionService.getJourneyDefinition(journeyCode, version);
+                JourneyDefinition result =
+                                journeyDefinitionService.getJourneyDefinition(journeyCode, version);
 
                 // Then
                 assertNotNull(result);
@@ -189,15 +199,14 @@ class JourneyDefinitionServiceIntegrationTest {
         @Test
         void shouldReturnAllJourneyDefinitions() {
                 // Given
-                List<JourneyDefinition> allDefinitions = List.of(
-                                mock(JourneyDefinition.class),
+                List<JourneyDefinition> allDefinitions = List.of(mock(JourneyDefinition.class),
                                 mock(JourneyDefinition.class));
 
-                when(repository.findAll())
-                                .thenReturn(allDefinitions);
+                when(repository.findAll()).thenReturn(allDefinitions);
 
                 // When
-                List<JourneyDefinition> result = journeyDefinitionService.getAllJourneyDefinitions();
+                List<JourneyDefinition> result =
+                                journeyDefinitionService.getAllJourneyDefinitions();
 
                 // Then
                 assertNotNull(result);
@@ -210,11 +219,11 @@ class JourneyDefinitionServiceIntegrationTest {
                 // Given
                 List<JourneyDefinition> emptyList = List.of();
 
-                when(repository.findAll())
-                                .thenReturn(emptyList);
+                when(repository.findAll()).thenReturn(emptyList);
 
                 // When
-                List<JourneyDefinition> result = journeyDefinitionService.getAllJourneyDefinitions();
+                List<JourneyDefinition> result =
+                                journeyDefinitionService.getAllJourneyDefinitions();
 
                 // Then
                 assertNotNull(result);
