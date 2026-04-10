@@ -7,10 +7,12 @@ import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ConcurrentModificationException;
 
 /**
  * MongoDB implementation of JourneyInstanceRepositoryPort.
@@ -32,23 +34,24 @@ public class JourneyInstanceRepositoryImpl implements JourneyInstanceRepositoryP
 
     @Override
     public JourneyInstance save(JourneyInstance journeyInstance) {
-        JourneyInstanceDocument document = mapper.toDocument(journeyInstance);
-        JourneyInstanceDocument saved = mongoJourneyInstanceRepository.save(document);
-        return mapper.toDomain(saved);
+        try {
+            JourneyInstanceDocument document = mapper.toDocument(journeyInstance);
+            JourneyInstanceDocument saved = mongoJourneyInstanceRepository.save(document);
+            return mapper.toDomain(saved);
+        } catch (OptimisticLockingFailureException e) {
+            throw new ConcurrentModificationException(
+                    "JourneyInstance modified concurrently: " + journeyInstance.getId(), e);
+        }
     }
 
     @Override
     public Optional<JourneyInstance> findById(String instanceId) {
-        return mongoJourneyInstanceRepository.findById(instanceId)
-                .map(mapper::toDomain);
+        return mongoJourneyInstanceRepository.findById(instanceId).map(mapper::toDomain);
     }
 
     @Override
     public List<JourneyInstance> findAll() {
-        return mongoJourneyInstanceRepository.findAll()
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
+        return mongoJourneyInstanceRepository.findAll().stream().map(mapper::toDomain).toList();
     }
 
     @Override

@@ -28,6 +28,7 @@ public class JourneyInstance {
     private Instant updatedAt;
     private List<TransitionHistory> history;
     private Map<String, Object> context;
+    private Long version;
 
     public void transitionTo(State newState, Event event) {
 

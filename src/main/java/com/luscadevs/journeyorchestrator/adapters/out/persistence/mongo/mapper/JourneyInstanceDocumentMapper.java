@@ -28,16 +28,21 @@ public class JourneyInstanceDocumentMapper {
         document.setId(journeyInstance.getId());
         document.setJourneyDefinitionId(journeyInstance.getJourneyDefinitionId());
         document.setJourneyVersion(journeyInstance.getJourneyVersion());
-        document.setCurrentState(
-                journeyInstance.getCurrentState() != null ? journeyInstance.getCurrentState().getName() : null);
-        document.setStatus(journeyInstance.getStatus() != null ? journeyInstance.getStatus().name() : null);
+        document.setCurrentState(journeyInstance.getCurrentState() != null
+                ? journeyInstance.getCurrentState().getName()
+                : null);
+        document.setStatus(
+                journeyInstance.getStatus() != null ? journeyInstance.getStatus().name() : null);
         document.setContext(journeyInstance.getContext());
         document.setMetadata(null); // metadata not available in current domain
         document.setStartedAt(
-                journeyInstance.getCreatedAt() != null ? journeyInstance.getCreatedAt().toString() : null);
+                journeyInstance.getCreatedAt() != null ? journeyInstance.getCreatedAt().toString()
+                        : null);
         document.setCompletedAt(null); // completedAt not available in current domain
         document.setLastActivityAt(
-                journeyInstance.getUpdatedAt() != null ? journeyInstance.getUpdatedAt().toString() : null);
+                journeyInstance.getUpdatedAt() != null ? journeyInstance.getUpdatedAt().toString()
+                        : null);
+        document.setVersion(journeyInstance.getVersion());
 
         return document;
     }
@@ -50,18 +55,20 @@ public class JourneyInstanceDocumentMapper {
             return null;
         }
 
-        return JourneyInstance.builder()
-                .id(document.getId())
+        return JourneyInstance.builder().id(document.getId())
                 .journeyDefinitionId(document.getJourneyDefinitionId())
                 .journeyVersion(document.getJourneyVersion())
-                .currentState(
-                        document.getCurrentState() != null ? State.builder().name(document.getCurrentState()).build()
-                                : null)
-                .status(document.getStatus() != null ? JourneyStatus.valueOf(document.getStatus()) : null)
-                .createdAt(document.getStartedAt() != null ? Instant.parse(document.getStartedAt()) : null)
-                .updatedAt(document.getLastActivityAt() != null ? Instant.parse(document.getLastActivityAt()) : null)
+                .currentState(document.getCurrentState() != null
+                        ? State.builder().name(document.getCurrentState()).build()
+                        : null)
+                .status(document.getStatus() != null ? JourneyStatus.valueOf(document.getStatus())
+                        : null)
+                .createdAt(document.getStartedAt() != null ? Instant.parse(document.getStartedAt())
+                        : null)
+                .updatedAt(document.getLastActivityAt() != null
+                        ? Instant.parse(document.getLastActivityAt())
+                        : null)
                 .history(new ArrayList<>()) // history - initialize empty
-                .context(document.getContext())
-                .build();
+                .context(document.getContext()).version(document.getVersion()).build();
     }
 }
