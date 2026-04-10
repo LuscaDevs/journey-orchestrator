@@ -74,4 +74,10 @@ public class JourneyDefinitionService {
                 return repository.findAll();
         }
 
+        public void deleteJourneyDefinition(String id) {
+                JourneyDefinition definition = repository.findById(id)
+                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
+                repository.delete(definition);
+        }
+
 }

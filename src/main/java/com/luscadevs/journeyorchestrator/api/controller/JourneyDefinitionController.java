@@ -7,6 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,6 +72,7 @@ public class JourneyDefinitionController implements JourneysApi {
     }
 
     @Override
+    @GetMapping
     public ResponseEntity<List<JourneyDefinitionResponse>> listJourneyDefinitions() {
         List<JourneyDefinition> definitions = journeyDefinitionService.getAllJourneyDefinitions();
 
@@ -85,6 +89,12 @@ public class JourneyDefinitionController implements JourneysApi {
         }).toList();
 
         return ResponseEntity.ok(responses);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJourneyDefinition(@PathVariable String id) {
+        journeyDefinitionService.deleteJourneyDefinition(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

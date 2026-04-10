@@ -15,6 +15,7 @@ import com.luscadevs.journey.api.generated.model.TransitionResponse;
 
 import com.luscadevs.journeyorchestrator.application.port.ConditionEvaluatorPort;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntaxException;
+import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValidationException;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
@@ -75,8 +76,9 @@ public final class JourneyDefinitionMapper {
 
                 // 3️⃣ Resolver estado inicial pelo tipo
                 State initialState = states.stream().filter(s -> s.getType() == StateType.INITIAL)
-                                .findFirst().orElseThrow(() -> new IllegalArgumentException(
-                                                "No INITIAL state defined"));
+                                .findFirst()
+                                .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                "No INITIAL state defined. Every journey must have exactly one INITIAL state."));
 
                 // 4️⃣ Mapear transitions
                 List<Transition> transitions = request.getTransitions().stream()

@@ -70,4 +70,15 @@ public class JourneyDefinitionRepositoryImpl implements JourneyDefinitionReposit
         JourneyDefinitionDocument saved = mongoJourneyDefinitionRepository.save(document);
         return mapper.toDomain(saved);
     }
+
+    @Override
+    public Optional<JourneyDefinition> findById(String id) {
+        return mongoJourneyDefinitionRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public void delete(JourneyDefinition journeyDefinition) {
+        JourneyDefinitionDocument document = mapper.toDocument(journeyDefinition);
+        mongoJourneyDefinitionRepository.delete(document);
+    }
 }

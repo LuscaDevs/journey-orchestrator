@@ -15,4 +15,8 @@ public interface JourneyDefinitionRepositoryPort {
     public List<JourneyDefinition> findAll();
 
     public JourneyDefinition save(JourneyDefinition journeyDefinition);
+
+    public Optional<JourneyDefinition> findById(String id);
+
+    public void delete(JourneyDefinition journeyDefinition);
 }

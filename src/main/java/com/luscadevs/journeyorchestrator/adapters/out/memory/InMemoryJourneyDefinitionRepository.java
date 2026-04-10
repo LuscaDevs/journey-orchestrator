@@ -60,4 +60,17 @@ public class InMemoryJourneyDefinitionRepository implements JourneyDefinitionRep
     public List<JourneyDefinition> findAll() {
         return storage.values().stream().toList();
     }
+
+    @Override
+    public Optional<JourneyDefinition> findById(String id) {
+        return storage.values().stream()
+                .filter(journeyDefinition -> journeyDefinition.getId() != null
+                        && journeyDefinition.getId().equals(id))
+                .findFirst();
+    }
+
+    @Override
+    public void delete(JourneyDefinition journeyDefinition) {
+        storage.remove(key(journeyDefinition.getJourneyCode(), journeyDefinition.getVersion()));
+    }
 }
