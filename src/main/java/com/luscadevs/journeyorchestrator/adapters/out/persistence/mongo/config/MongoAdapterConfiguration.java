@@ -18,12 +18,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 /**
- * Configuration class for MongoDB persistence adapters.
- * Enables MongoDB repositories and configures necessary beans.
+ * Configuration class for MongoDB persistence adapters. Enables MongoDB repositories and configures
+ * necessary beans.
  */
 @Configuration
-@EnableMongoRepositories(basePackages = "com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.repository")
-@EnableConfigurationProperties(MongoProperties.class)
+@EnableMongoRepositories(
+        basePackages = "com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.repository")
+@EnableConfigurationProperties(MongoPersistenceProperties.class)
 @Profile("!test")
 public class MongoAdapterConfiguration {
 
@@ -36,14 +37,16 @@ public class MongoAdapterConfiguration {
     public JourneyDefinitionRepositoryPort journeyDefinitionRepositoryPort(
             MongoJourneyDefinitionRepository mongoJourneyDefinitionRepository,
             JourneyDefinitionDocumentMapper journeyDefinitionDocumentMapper) {
-        return new JourneyDefinitionRepositoryImpl(mongoJourneyDefinitionRepository, journeyDefinitionDocumentMapper);
+        return new JourneyDefinitionRepositoryImpl(mongoJourneyDefinitionRepository,
+                journeyDefinitionDocumentMapper);
     }
 
     @Bean
     public JourneyInstanceRepositoryPort journeyInstanceRepositoryPort(
             MongoJourneyInstanceRepository mongoJourneyInstanceRepository,
             JourneyInstanceDocumentMapper journeyInstanceDocumentMapper) {
-        return new JourneyInstanceRepositoryImpl(mongoJourneyInstanceRepository, journeyInstanceDocumentMapper);
+        return new JourneyInstanceRepositoryImpl(mongoJourneyInstanceRepository,
+                journeyInstanceDocumentMapper);
     }
 
     @Bean
@@ -62,7 +65,6 @@ public class MongoAdapterConfiguration {
     }
 
     /**
-     * MongoTemplate is automatically configured by Spring Boot.
-     * No need to define it manually here.
+     * MongoTemplate is automatically configured by Spring Boot. No need to define it manually here.
      */
 }

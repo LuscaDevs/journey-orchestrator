@@ -80,4 +80,26 @@ public class JourneyDefinitionService {
                 repository.delete(definition);
         }
 
+        public JourneyDefinition updateJourneyDefinition(String id,
+                        CreateJourneyDefinitionRequest request) {
+                JourneyDefinition definition = JourneyDefinitionMapper.toDomain(request);
+
+                // Validate DSL structure before saving
+                validator.validate(definition);
+
+                // Update the existing journey definition
+                JourneyDefinition existing = repository.findById(id)
+                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
+
+                // Keep the original journey code and ID, but update other fields
+                JourneyDefinition updatedDefinition = existing.toBuilder()
+                                .name(definition.getName()).states(definition.getStates())
+                                .transitions(definition.getTransitions())
+                                .version(definition.getVersion()).build();
+
+                repository.save(updatedDefinition);
+
+                return updatedDefinition;
+        }
+
 }

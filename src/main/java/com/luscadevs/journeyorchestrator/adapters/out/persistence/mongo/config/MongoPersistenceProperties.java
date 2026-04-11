@@ -8,33 +8,33 @@ import lombok.Data;
  */
 @Data
 @ConfigurationProperties(prefix = "journey-orchestrator.persistence.mongodb")
-public class MongoProperties {
-    
+public class MongoPersistenceProperties {
+
     /**
      * Connection timeout in milliseconds.
      */
     private int connectionTimeout = 5000;
-    
+
     /**
      * Maximum connection pool size.
      */
     private int maxPoolSize = 20;
-    
+
     /**
      * Minimum connection pool size.
      */
     private int minPoolSize = 5;
-    
+
     /**
      * Enable auto-index creation.
      */
     private boolean autoIndexCreation = true;
-    
+
     /**
      * Connection URI for MongoDB.
      */
     private String uri;
-    
+
     /**
      * Database name.
      */

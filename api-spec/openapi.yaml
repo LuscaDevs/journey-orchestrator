@@ -74,6 +74,46 @@ paths:
                 items:
                   $ref: "#/components/schemas/JourneyDefinitionResponse"
 
+  /journeys/{id}:
+    put:
+      tags:
+        - Journey Definitions
+      summary: Update a journey definition
+      operationId: updateJourneyDefinition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJourneyDefinitionRequest"
+      responses:
+        "200":
+          description: Journey definition updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyDefinitionResponse"
+    delete:
+      tags:
+        - Journey Definitions
+      summary: Delete a journey definition
+      operationId: deleteJourneyDefinition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Journey definition deleted
+
   /journey-instances:
     post:
       tags:

@@ -16,6 +16,7 @@ import com.luscadevs.journey.api.generated.model.TransitionResponse;
 import com.luscadevs.journeyorchestrator.application.port.ConditionEvaluatorPort;
 import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntaxException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValidationException;
+import com.luscadevs.journeyorchestrator.domain.exception.JourneyErrorCodes;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
@@ -78,6 +79,7 @@ public final class JourneyDefinitionMapper {
                 State initialState = states.stream().filter(s -> s.getType() == StateType.INITIAL)
                                 .findFirst()
                                 .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.NO_INITIAL_STATE,
                                                 "No INITIAL state defined. Every journey must have exactly one INITIAL state."));
 
                 // 4️⃣ Mapear transitions
@@ -102,21 +104,25 @@ public final class JourneyDefinitionMapper {
                         State idBasedSource = stateMap.values().stream()
                                         .filter(s -> t.getSourceStateId().equals(s.getId()))
                                         .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException(
+                                        .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                        JourneyErrorCodes.SOURCE_STATE_NOT_FOUND,
                                                         "Source state with ID '"
                                                                         + t.getSourceStateId()
                                                                         + "' not found"));
 
                         State nameBasedSource = stateMap.get(t.getSource());
                         if (nameBasedSource == null) {
-                                throw new IllegalArgumentException(
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.SOURCE_STATE_NOT_FOUND,
                                                 "Source state '" + t.getSource() + "' not found");
                         }
 
                         if (!idBasedSource.equals(nameBasedSource)) {
-                                throw new IllegalArgumentException("Conflict: source state ID '"
-                                                + t.getSourceStateId() + "' and name '"
-                                                + t.getSource() + "' refer to different states");
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.TRANSITION_CONFLICT,
+                                                "Conflict: source state ID '" + t.getSourceStateId()
+                                                                + "' and name '" + t.getSource()
+                                                                + "' refer to different states");
                         }
 
                         source = idBasedSource;
@@ -125,7 +131,8 @@ public final class JourneyDefinitionMapper {
                         source = stateMap.values().stream()
                                         .filter(s -> t.getSourceStateId().equals(s.getId()))
                                         .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException(
+                                        .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                        JourneyErrorCodes.SOURCE_STATE_NOT_FOUND,
                                                         "Source state with ID '"
                                                                         + t.getSourceStateId()
                                                                         + "' not found"));
@@ -133,11 +140,13 @@ public final class JourneyDefinitionMapper {
                         // Name-based reference only (legacy)
                         source = stateMap.get(t.getSource());
                         if (source == null) {
-                                throw new IllegalArgumentException(
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.SOURCE_STATE_NOT_FOUND,
                                                 "Source state '" + t.getSource() + "' not found");
                         }
                 } else {
-                        throw new IllegalArgumentException(
+                        throw new JourneyDefinitionValidationException(
+                                        JourneyErrorCodes.TRANSITION_SOURCE_REQUIRED,
                                         "Source state reference missing (provide either source or sourceStateId)");
                 }
 
@@ -147,21 +156,25 @@ public final class JourneyDefinitionMapper {
                         State idBasedTarget = stateMap.values().stream()
                                         .filter(s -> t.getTargetStateId().equals(s.getId()))
                                         .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException(
+                                        .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                        JourneyErrorCodes.TARGET_STATE_NOT_FOUND,
                                                         "Target state with ID '"
                                                                         + t.getTargetStateId()
                                                                         + "' not found"));
 
                         State nameBasedTarget = stateMap.get(t.getTarget());
                         if (nameBasedTarget == null) {
-                                throw new IllegalArgumentException(
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.TARGET_STATE_NOT_FOUND,
                                                 "Target state '" + t.getTarget() + "' not found");
                         }
 
                         if (!idBasedTarget.equals(nameBasedTarget)) {
-                                throw new IllegalArgumentException("Conflict: target state ID '"
-                                                + t.getTargetStateId() + "' and name '"
-                                                + t.getTarget() + "' refer to different states");
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.TRANSITION_CONFLICT,
+                                                "Conflict: target state ID '" + t.getTargetStateId()
+                                                                + "' and name '" + t.getTarget()
+                                                                + "' refer to different states");
                         }
 
                         target = idBasedTarget;
@@ -170,7 +183,8 @@ public final class JourneyDefinitionMapper {
                         target = stateMap.values().stream()
                                         .filter(s -> t.getTargetStateId().equals(s.getId()))
                                         .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException(
+                                        .orElseThrow(() -> new JourneyDefinitionValidationException(
+                                                        JourneyErrorCodes.TARGET_STATE_NOT_FOUND,
                                                         "Target state with ID '"
                                                                         + t.getTargetStateId()
                                                                         + "' not found"));
@@ -178,11 +192,13 @@ public final class JourneyDefinitionMapper {
                         // Name-based reference only (legacy)
                         target = stateMap.get(t.getTarget());
                         if (target == null) {
-                                throw new IllegalArgumentException(
+                                throw new JourneyDefinitionValidationException(
+                                                JourneyErrorCodes.TARGET_STATE_NOT_FOUND,
                                                 "Target state '" + t.getTarget() + "' not found");
                         }
                 } else {
-                        throw new IllegalArgumentException(
+                        throw new JourneyDefinitionValidationException(
+                                        JourneyErrorCodes.TRANSITION_TARGET_REQUIRED,
                                         "Target state reference missing (provide either target or targetStateId)");
                 }
 

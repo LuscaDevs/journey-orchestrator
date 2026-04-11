@@ -4,11 +4,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 /**
- * MongoDB configuration for the Journey Orchestrator application.
- * Uses Spring Boot auto-configuration with custom properties.
+ * MongoDB configuration for the Journey Orchestrator application. Uses Spring Boot
+ * auto-configuration with custom properties.
  */
 @Configuration
-@EnableConfigurationProperties(MongoProperties.class)
+@EnableConfigurationProperties(MongoPersistenceProperties.class)
 public class MongoConfiguration {
 
     // Configuration is handled by Spring Boot auto-configuration

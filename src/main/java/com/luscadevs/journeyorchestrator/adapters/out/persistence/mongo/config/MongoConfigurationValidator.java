@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 @Validated
 public class MongoConfigurationValidator {
 
-    private final MongoProperties mongoProperties;
+    private final MongoPersistenceProperties mongoProperties;
     private final Validator validator;
 
-    public MongoConfigurationValidator(MongoProperties mongoProperties) {
+    public MongoConfigurationValidator(MongoPersistenceProperties mongoProperties) {
         this.mongoProperties = mongoProperties;
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
     }

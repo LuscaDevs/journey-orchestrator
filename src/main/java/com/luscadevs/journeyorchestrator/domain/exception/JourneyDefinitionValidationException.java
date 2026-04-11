@@ -12,11 +12,14 @@ import com.luscadevs.journeyorchestrator.domain.validation.ValidationError;
 public class JourneyDefinitionValidationException extends RuntimeException {
 
     private final List<ValidationError> errors;
+    private final String code;
 
     public JourneyDefinitionValidationException(List<ValidationError> errors) {
         super("Journey definition validation failed: " + errors.stream()
                 .map(ValidationError::getMessage).reduce((a, b) -> a + "; " + b).orElse(""));
         this.errors = new ArrayList<>(errors);
+        this.code =
+                errors.isEmpty() ? JourneyErrorCodes.INVALID_JOURNEY_CODE : errors.get(0).getCode();
     }
 
     public JourneyDefinitionValidationException(ValidationError error) {
@@ -28,8 +31,25 @@ public class JourneyDefinitionValidationException extends RuntimeException {
                 .message(error).build()));
     }
 
+    public JourneyDefinitionValidationException(String code, String message) {
+        super(message);
+        this.code = code;
+        this.errors = new ArrayList<>();
+    }
+
+    public JourneyDefinitionValidationException(String code, String message,
+            List<ValidationError> errors) {
+        super(message);
+        this.code = code;
+        this.errors = new ArrayList<>(errors);
+    }
+
     public List<ValidationError> getErrors() {
         return new ArrayList<>(errors);
+    }
+
+    public String getCode() {
+        return code;
     }
 
     /**

@@ -9,16 +9,16 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 
 /**
- * MongoDB configuration for development environment.
- * Uses local MongoDB instance with development-specific settings.
+ * MongoDB configuration for development environment. Uses local MongoDB instance with
+ * development-specific settings.
  */
 @Configuration
 @Profile("dev")
 public class DevMongoConfiguration {
 
-    private final MongoProperties mongoProperties;
+    private final MongoPersistenceProperties mongoProperties;
 
-    public DevMongoConfiguration(MongoProperties mongoProperties) {
+    public DevMongoConfiguration(MongoPersistenceProperties mongoProperties) {
         this.mongoProperties = mongoProperties;
     }
 
@@ -33,6 +33,7 @@ public class DevMongoConfiguration {
     @Bean
     public MongoTemplate mongoTemplate(MongoClient mongoClient) {
         return new MongoTemplate(mongoClient,
-                mongoProperties.getDatabase() != null ? mongoProperties.getDatabase() : "journey_orchestrator_dev");
+                mongoProperties.getDatabase() != null ? mongoProperties.getDatabase()
+                        : "journey_orchestrator_dev");
     }
 }

@@ -284,8 +284,8 @@ public class GlobalExceptionHandler {
 
                 problemDetail.setTitle("Validation Error");
                 problemDetail.setType(URI.create(
-                                "https://api.journey-orchestrator.com/errors/validation_001"));
-                problemDetail.setProperty("errorCode", "VALIDATION_001");
+                                "https://api.journey-orchestrator.com/errors/" + ex.getCode()));
+                problemDetail.setProperty("errorCode", ex.getCode());
                 problemDetail.setProperty("timestamp", java.time.Instant.now().toString());
                 problemDetail.setProperty("path", request.getRequestURI());
 

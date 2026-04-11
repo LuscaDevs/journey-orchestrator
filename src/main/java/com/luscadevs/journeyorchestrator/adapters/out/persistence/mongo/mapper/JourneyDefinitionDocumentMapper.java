@@ -51,7 +51,7 @@ public class JourneyDefinitionDocumentMapper {
                         document.setStates(stateDocuments);
                 }
 
-                // Map transitions using available fields
+                // Map transitions using available fields and sort in sequential order
                 if (journeyDefinition.getTransitions() != null) {
                         List<JourneyDefinitionDocument.TransitionDocument> transitionDocuments =
                                         journeyDefinition.getTransitions().stream().map(
@@ -81,10 +81,83 @@ public class JourneyDefinitionDocumentMapper {
                                                                              // domain
                                                                              // domain
                                                         )).collect(Collectors.toList());
-                        document.setTransitions(transitionDocuments);
+
+                        // Sort transitions in sequential order (from initial to final)
+                        List<JourneyDefinitionDocument.TransitionDocument> sortedTransitions =
+                                        sortTransitionsSequentially(transitionDocuments,
+                                                        journeyDefinition.getStates());
+                        document.setTransitions(sortedTransitions);
                 }
 
                 return document;
+        }
+
+        /**
+         * Sort transitions in sequential order based on journey flow from initial to final states.
+         */
+        private List<JourneyDefinitionDocument.TransitionDocument> sortTransitionsSequentially(
+                        List<JourneyDefinitionDocument.TransitionDocument> transitions,
+                        List<State> states) {
+                if (transitions == null || transitions.isEmpty() || states == null
+                                || states.isEmpty()) {
+                        return transitions;
+                }
+
+                // Find the initial state
+                String initialStateName =
+                                states.stream().filter(s -> "INITIAL".equals(s.getType().name()))
+                                                .map(State::getName).findFirst().orElse(null);
+
+                if (initialStateName == null) {
+                        // No initial state found, return original list
+                        return transitions;
+                }
+
+                // Build a map of transitions by source state for quick lookup
+                java.util.Map<String, List<JourneyDefinitionDocument.TransitionDocument>> transitionsBySource =
+                                transitions.stream().collect(java.util.stream.Collectors.groupingBy(
+                                                JourneyDefinitionDocument.TransitionDocument::getFromState));
+
+                // Sort transitions sequentially
+                List<JourneyDefinitionDocument.TransitionDocument> sortedTransitions =
+                                new java.util.ArrayList<>();
+                java.util.Set<String> visitedStates = new java.util.HashSet<>();
+                String currentState = initialStateName;
+
+                while (currentState != null && !visitedStates.contains(currentState)) {
+                        visitedStates.add(currentState);
+                        List<JourneyDefinitionDocument.TransitionDocument> outgoingTransitions =
+                                        transitionsBySource.get(currentState);
+
+                        if (outgoingTransitions != null && !outgoingTransitions.isEmpty()) {
+                                // Add transitions from current state
+                                for (JourneyDefinitionDocument.TransitionDocument transition : outgoingTransitions) {
+                                        if (!sortedTransitions.contains(transition)) {
+                                                sortedTransitions.add(transition);
+                                        }
+                                }
+
+                                // Move to the first target state (assuming linear flow)
+                                String nextState = outgoingTransitions.get(0).getToState();
+                                if (!visitedStates.contains(nextState)) {
+                                        currentState = nextState;
+                                } else {
+                                        currentState = null;
+                                }
+                        } else {
+                                currentState = null;
+                        }
+                }
+
+                // Add any remaining transitions that weren't in the sequential path (e.g.,
+                // branching)
+                for (JourneyDefinitionDocument.TransitionDocument transition : transitions) {
+                        if (!sortedTransitions.contains(transition)) {
+                                sortedTransitions.add(transition);
+                        }
+                }
+
+                return sortedTransitions;
         }
 
         /**
