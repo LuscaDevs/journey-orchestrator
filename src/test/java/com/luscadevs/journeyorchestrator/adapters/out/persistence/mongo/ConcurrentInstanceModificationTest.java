@@ -233,7 +233,7 @@ public class ConcurrentInstanceModificationTest {
         definition.setName("Concurrent Test Journey");
         definition.setDescription("Journey for concurrent testing");
         definition.setVersion(1);
-        definition.setActive(true);
+        definition.setStatus("ATIVA");
 
         // Create states
         List<JourneyDefinitionDocument.StateDocument> states = new ArrayList<>();

@@ -53,9 +53,12 @@ public class MultipleVersionsPersistenceTest {
         assertNotNull(savedV3.getId());
 
         // Verify all versions exist
-        Optional<JourneyDefinitionDocument> foundV1 = repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 1);
-        Optional<JourneyDefinitionDocument> foundV2 = repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 2);
-        Optional<JourneyDefinitionDocument> foundV3 = repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 3);
+        Optional<JourneyDefinitionDocument> foundV1 =
+                repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 1);
+        Optional<JourneyDefinitionDocument> foundV2 =
+                repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 2);
+        Optional<JourneyDefinitionDocument> foundV3 =
+                repository.findByJourneyCodeAndVersion(JOURNEY_CODE, 3);
 
         assertTrue(foundV1.isPresent());
         assertTrue(foundV2.isPresent());
@@ -101,7 +104,8 @@ public class MultipleVersionsPersistenceTest {
         repository.save(createJourneyDefinition(3));
 
         // Find latest version
-        Optional<JourneyDefinitionDocument> latest = repository.findFirstByJourneyCodeOrderByVersionDesc(JOURNEY_CODE);
+        Optional<JourneyDefinitionDocument> latest =
+                repository.findFirstByJourneyCodeOrderByVersionDesc(JOURNEY_CODE);
 
         assertTrue(latest.isPresent());
         assertEquals(5, latest.get().getVersion()); // Should be the highest version
@@ -113,7 +117,7 @@ public class MultipleVersionsPersistenceTest {
         doc.setName("Test Journey v" + version);
         doc.setDescription("Test journey for version " + version);
         doc.setVersion(version);
-        doc.setActive(true);
+        doc.setStatus("ATIVA");
         return doc;
     }
 }

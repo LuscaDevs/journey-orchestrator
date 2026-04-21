@@ -61,9 +61,32 @@ public class JourneyDefinitionValidator {
      * Valida campos básicos obrigatórios.
      */
     private void validateBasicFields(JourneyDefinition definition, List<ValidationError> errors) {
-        if (definition.getJourneyCode() == null || definition.getJourneyCode().trim().isEmpty()) {
+        String journeyCode = definition.getJourneyCode();
+
+        if (journeyCode == null || journeyCode.trim().isEmpty()) {
             errors.add(
                     ValidationError.ofInvalidBasicField("journeyCode", "Journey code is required"));
+        } else {
+            // Trim whitespace before validation
+            journeyCode = journeyCode.trim();
+
+            // Validate journeyCode format: SNAKE_CASE, max 10 characters
+            if (journeyCode.length() > 10) {
+                errors.add(ValidationError.ofInvalidBasicField("journeyCode",
+                        "Journey code must be maximum 10 characters"));
+            }
+            if (!journeyCode.matches("^[A-Z0-9_]+$")) {
+                errors.add(ValidationError.ofInvalidBasicField("journeyCode",
+                        "Journey code must contain only uppercase letters, numbers, and underscores"));
+            }
+            if (journeyCode.startsWith("_") || journeyCode.endsWith("_")) {
+                errors.add(ValidationError.ofInvalidBasicField("journeyCode",
+                        "Journey code cannot start or end with underscore"));
+            }
+            if (journeyCode.contains("__")) {
+                errors.add(ValidationError.ofInvalidBasicField("journeyCode",
+                        "Journey code cannot have consecutive underscores"));
+            }
         }
 
         if (definition.getName() == null || definition.getName().trim().isEmpty()) {

@@ -13,7 +13,7 @@ public class JourneyDefinitionFixtures {
          */
         public static Map<String, Object> simpleJourney() {
                 return Map.of("journeyCode", "SIMPLE_JOURNEY", "name", "Simple Test Journey",
-                                "version", 1, "active", true, "states",
+                                "version", 1, "status", "ATIVA", "states",
                                 java.util.List.of(Map.of("name", "START", "type", "INITIAL",
                                                 "description", "Initial state of the journey"),
                                                 Map.of("name", "END", "type", "FINAL",
@@ -30,7 +30,7 @@ public class JourneyDefinitionFixtures {
          */
         public static Map<String, Object> conditionalJourney() {
                 return Map.of("journeyCode", "CONDITIONAL_JOURNEY", "name",
-                                "Conditional Test Journey", "version", 1, "active", true,
+                                "Conditional Test Journey", "version", 1, "status", "ATIVA",
                                 "description",
                                 "A journey with conditional transitions based on event data",
                                 "states",
@@ -85,7 +85,7 @@ public class JourneyDefinitionFixtures {
          */
         public static Map<String, Object> dataCentricJourney() {
                 return Map.of("journeyCode", "DATA_CENTRIC_JOURNEY", "name",
-                                "Data Centric Test Journey", "version", 1, "active", true,
+                                "Data Centric Test Journey", "version", 1, "status", "ATIVA",
                                 "description", "A journey focused on data context management",
                                 "states",
                                 java.util.List.of(Map.of(

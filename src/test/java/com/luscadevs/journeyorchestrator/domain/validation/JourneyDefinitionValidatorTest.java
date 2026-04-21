@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
+import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinitionStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
@@ -39,7 +40,7 @@ class JourneyDefinitionValidatorTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, finalState))
                                 .transitions(List.of(transition)).createdAt(Instant.now()).build();
 
@@ -71,7 +72,8 @@ class JourneyDefinitionValidatorTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("LOAN_APPROVAL").name("Loan Approval Journey")
-                                .version(1).active(true).initialState(initialState)
+                                .version(1).status(JourneyDefinitionStatus.ATIVA)
+                                .initialState(initialState)
                                 .states(List.of(initialState, intermediateState, finalState))
                                 .transitions(List.of(transition1, transition2))
                                 .createdAt(Instant.now()).build();
@@ -101,7 +103,7 @@ class JourneyDefinitionValidatorTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("DECISION_JOURNEY").name("Decision Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, approvedState, rejectedState))
                                 .transitions(List.of(approveTransition, rejectTransition))
                                 .createdAt(Instant.now()).build();
@@ -137,7 +139,8 @@ class JourneyDefinitionValidatorTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("CREDIT_ANALYSIS").name("Credit Analysis Journey")
-                                .version(2).active(true).initialState(initialState)
+                                .version(2).status(JourneyDefinitionStatus.ATIVA)
+                                .initialState(initialState)
                                 .states(List.of(initialState, approvedState, rejectedState))
                                 .transitions(List.of(approveTransition, rejectTransition))
                                 .createdAt(Instant.now()).build();
@@ -185,7 +188,8 @@ class JourneyDefinitionValidatorTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("COMPLEX_JOURNEY").name("Complex Multi-step Journey")
-                                .version(1).active(true).initialState(initialState)
+                                .version(1).status(JourneyDefinitionStatus.ATIVA)
+                                .initialState(initialState)
                                 .states(List.of(initialState, reviewState, analysisState,
                                                 approvalState, finalState))
                                 .transitions(transitions).createdAt(Instant.now()).build();

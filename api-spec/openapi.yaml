@@ -99,6 +99,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JourneyDefinitionResponse"
+    patch:
+      tags:
+        - Journey Definitions
+      summary: Update journey definition status
+      operationId: updateJourneyDefinitionStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusRequest"
+      responses:
+        "200":
+          description: Journey definition status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JourneyDefinitionResponse"
     delete:
       tags:
         - Journey Definitions
@@ -284,6 +308,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TransitionRequest"
+        status:
+          $ref: "#/components/schemas/JourneyDefinitionStatus"
 
     JourneyDefinitionResponse:
       type: object
@@ -304,9 +330,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TransitionResponse"
-        active:
-          type: boolean
+        status:
+          $ref: "#/components/schemas/JourneyDefinitionStatus"
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
@@ -456,6 +485,21 @@ components:
         - COMPLETED
         - FAILED
         - CANCELLED
+
+    JourneyDefinitionStatus:
+      type: string
+      enum:
+        - ATIVA
+        - INATIVA
+        - RASCUNHO
+
+    UpdateStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: "#/components/schemas/JourneyDefinitionStatus"
 
     TransitionHistoryListResponse:
       type: object

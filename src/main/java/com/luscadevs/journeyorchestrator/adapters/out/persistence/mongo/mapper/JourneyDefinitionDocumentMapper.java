@@ -2,6 +2,7 @@ package com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.mapper;
 
 import com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.document.JourneyDefinitionDocument;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
+import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinitionStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
@@ -29,7 +30,21 @@ public class JourneyDefinitionDocumentMapper {
                 document.setJourneyCode(journeyDefinition.getJourneyCode());
                 document.setName(journeyDefinition.getName());
                 document.setVersion(journeyDefinition.getVersion());
-                document.setActive(journeyDefinition.isActive());
+                document.setStatus(journeyDefinition.getStatus() != null
+                                ? journeyDefinition.getStatus().name()
+                                : JourneyDefinitionStatus.RASCUNHO.name());
+
+                // Map audit fields
+                if (journeyDefinition.getCreatedAt() != null) {
+                        document.setCreatedAt(java.time.LocalDateTime.ofInstant(
+                                        journeyDefinition.getCreatedAt(),
+                                        java.time.ZoneId.systemDefault()));
+                }
+                if (journeyDefinition.getUpdatedAt() != null) {
+                        document.setUpdatedAt(java.time.LocalDateTime.ofInstant(
+                                        journeyDefinition.getUpdatedAt(),
+                                        java.time.ZoneId.systemDefault()));
+                }
 
                 // Map states using available fields
                 if (journeyDefinition.getStates() != null) {
@@ -171,7 +186,20 @@ public class JourneyDefinitionDocumentMapper {
                 JourneyDefinition.JourneyDefinitionBuilder builder = JourneyDefinition.builder()
                                 .id(document.getId()).journeyCode(document.getJourneyCode())
                                 .name(document.getName()).version(document.getVersion())
-                                .active(document.isActive());
+                                .status(document.getStatus() != null
+                                                ? JourneyDefinitionStatus
+                                                                .valueOf(document.getStatus())
+                                                : JourneyDefinitionStatus.RASCUNHO);
+
+                // Map audit fields
+                if (document.getCreatedAt() != null) {
+                        builder.createdAt(document.getCreatedAt()
+                                        .atZone(java.time.ZoneId.systemDefault()).toInstant());
+                }
+                if (document.getUpdatedAt() != null) {
+                        builder.updatedAt(document.getUpdatedAt()
+                                        .atZone(java.time.ZoneId.systemDefault()).toInstant());
+                }
 
                 // Map states using available fields
                 if (document.getStates() != null) {

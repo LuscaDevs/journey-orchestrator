@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValidationException;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
+import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinitionStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
@@ -41,13 +42,13 @@ class JourneyDefinitionValidatorInvalidTest {
         @DisplayName("Deve rejeitar campos básicos inválidos")
         void shouldRejectInvalidBasicFields() {
                 // Arrange
-                JourneyDefinition definition =
-                                JourneyDefinition.builder().id("test-id").journeyCode("") // Código
-                                                                                          // vazio
-                                                .name("") // Nome vazio
-                                                .version(0) // Versão inválida
-                                                .active(true).initialState(null).states(null)
-                                                .transitions(null).createdAt(Instant.now()).build();
+                JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
+                                .journeyCode("") // Código
+                                                 // vazio
+                                .name("") // Nome vazio
+                                .version(0) // Versão inválida
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(null)
+                                .states(null).transitions(null).createdAt(Instant.now()).build();
 
                 // Act & Assert
                 JourneyDefinitionValidationException exception =
@@ -70,7 +71,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, duplicateState)).transitions(null)
                                 .createdAt(Instant.now()).build();
 
@@ -94,7 +95,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState1)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState1)
                                 .states(List.of(initialState1, initialState2, finalState))
                                 .transitions(null).createdAt(Instant.now()).build();
 
@@ -115,7 +116,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true)
+                                .status(JourneyDefinitionStatus.ATIVA)
                                 .initialState(State.builder().name("UNKNOWN")
                                                 .type(StateType.INITIAL).build()) // Estado não
                                                                                   // existe
@@ -147,7 +148,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, finalState)) // unknownState não está
                                                                            // aqui
                                 .transitions(List.of(transition)).createdAt(Instant.now()).build();
@@ -176,7 +177,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, finalState))
                                 .transitions(List.of(transition1, transition2))
                                 .createdAt(Instant.now()).build();
@@ -206,7 +207,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, reachableState, unreachableState))
                                 .transitions(List.of(transition)).createdAt(Instant.now()).build();
 
@@ -228,7 +229,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, intermediateState)).transitions(null)
                                 .createdAt(Instant.now()).build();
 
@@ -263,7 +264,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, finalState, anotherState))
                                 .transitions(List.of(invalidTransition)).createdAt(Instant.now())
                                 .build();
@@ -293,7 +294,7 @@ class JourneyDefinitionValidatorInvalidTest {
 
                 JourneyDefinition definition = JourneyDefinition.builder().id("test-id")
                                 .journeyCode("TEST_JOURNEY").name("Test Journey").version(1)
-                                .active(true).initialState(initialState)
+                                .status(JourneyDefinitionStatus.ATIVA).initialState(initialState)
                                 .states(List.of(initialState, finalState))
                                 .transitions(List.of(transition)).createdAt(Instant.now()).build();
 

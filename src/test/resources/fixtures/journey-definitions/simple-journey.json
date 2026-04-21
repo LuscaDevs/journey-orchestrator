@@ -2,7 +2,7 @@
   "journeyCode": "SIMPLE_JOURNEY",
   "name": "Simple Test Journey",
   "version": 1,
-  "active": true,
+  "status": "ATIVA",
   "states": [
     {
       "name": "START",

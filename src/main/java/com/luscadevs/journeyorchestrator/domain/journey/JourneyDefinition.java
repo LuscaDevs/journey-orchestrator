@@ -18,7 +18,7 @@ public class JourneyDefinition {
 
     private Integer version;
 
-    private boolean active;
+    private JourneyDefinitionStatus status;
 
     private State initialState;
 
@@ -27,6 +27,8 @@ public class JourneyDefinition {
     private List<Transition> transitions;
 
     private Instant createdAt;
+
+    private Instant updatedAt;
 
 
 }

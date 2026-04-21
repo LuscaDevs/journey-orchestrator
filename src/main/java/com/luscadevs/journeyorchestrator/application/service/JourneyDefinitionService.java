@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.application.service;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -91,11 +92,28 @@ public class JourneyDefinitionService {
                 JourneyDefinition existing = repository.findById(id)
                                 .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
 
-                // Keep the original journey code and ID, but update other fields
+                // Keep the original ID and createdAt, but update other fields including journeyCode
+                // and updatedAt
                 JourneyDefinition updatedDefinition = existing.toBuilder()
-                                .name(definition.getName()).states(definition.getStates())
+                                .journeyCode(definition.getJourneyCode()).name(definition.getName())
+                                .states(definition.getStates())
                                 .transitions(definition.getTransitions())
-                                .version(definition.getVersion()).build();
+                                .version(definition.getVersion()).updatedAt(Instant.now()).build();
+
+                repository.save(updatedDefinition);
+
+                return updatedDefinition;
+        }
+
+        public JourneyDefinition updateJourneyDefinitionStatus(String id, String status) {
+                JourneyDefinition existing = repository.findById(id)
+                                .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
+
+                // Update the status
+                JourneyDefinition updatedDefinition = existing.toBuilder().status(
+                                com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinitionStatus
+                                                .valueOf(status))
+                                .build();
 
                 repository.save(updatedDefinition);
 

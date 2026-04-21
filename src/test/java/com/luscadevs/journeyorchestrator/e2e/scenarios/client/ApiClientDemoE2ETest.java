@@ -63,7 +63,7 @@ public class ApiClientDemoE2ETest extends AbstractE2ETest {
                                 .journeyDefinition().withCode("CUSTOM_JOURNEY")
                                 .withName("Custom Test Journey")
                                 .withDescription("A journey created with the builder pattern")
-                                .active(true).create().assertSuccess();
+                                .create().assertSuccess();
 
                 // When: Start an instance
                 JourneyApiClient.JourneyInstanceResponse instance = apiClient.journeyInstance()

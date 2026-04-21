@@ -19,6 +19,7 @@ import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValid
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyErrorCodes;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
+import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinitionStatus;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
 import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
@@ -87,10 +88,17 @@ public final class JourneyDefinitionMapper {
                                 .map(t -> mapTransition(t, stateMap)).toList();
 
                 // 5️⃣ Construir domínio
-                return JourneyDefinition.builder().journeyCode(request.getJourneyCode())
-                                .name(request.getName()).version(request.getVersion())
+                String journeyCode =
+                                request.getJourneyCode() != null ? request.getJourneyCode().trim()
+                                                : null;
+                return JourneyDefinition.builder().journeyCode(journeyCode).name(request.getName())
+                                .version(request.getVersion())
+                                .status(request.getStatus() != null
+                                                ? JourneyDefinitionStatus.valueOf(
+                                                                request.getStatus().getValue())
+                                                : JourneyDefinitionStatus.RASCUNHO)
                                 .states(states).initialState(initialState).transitions(transitions)
-                                .createdAt(Instant.now()).build();
+                                .createdAt(Instant.now()).updatedAt(Instant.now()).build();
         }
 
         private static Transition mapTransition(TransitionRequest t, Map<String, State> stateMap) {
@@ -244,9 +252,16 @@ public final class JourneyDefinitionMapper {
                 response.setJourneyCode(definition.getJourneyCode());
                 response.setName(definition.getName());
                 response.setVersion(definition.getVersion());
-                response.setActive(definition.isActive());
+                response.setStatus(definition.getStatus() != null
+                                ? com.luscadevs.journey.api.generated.model.JourneyDefinitionStatus
+                                                .valueOf(definition.getStatus().name())
+                                : com.luscadevs.journey.api.generated.model.JourneyDefinitionStatus.RASCUNHO);
                 response.setCreatedAt(definition.getCreatedAt() != null
                                 ? OffsetDateTime.ofInstant(definition.getCreatedAt(),
+                                                ZoneOffset.UTC)
+                                : null);
+                response.setUpdatedAt(definition.getUpdatedAt() != null
+                                ? OffsetDateTime.ofInstant(definition.getUpdatedAt(),
                                                 ZoneOffset.UTC)
                                 : null);
 

@@ -15,7 +15,7 @@
       "type": "array",
       "items": { "$ref": "#/definitions/TransitionResponse" }
     },
-    "active": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["ATIVA", "INATIVA", "RASCUNHO"] },
     "createdAt": { "type": "string", "format": "date-time" }
   },
   "definitions": {

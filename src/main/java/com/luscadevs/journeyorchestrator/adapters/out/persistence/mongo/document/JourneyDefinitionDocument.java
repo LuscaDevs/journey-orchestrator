@@ -32,7 +32,7 @@ public class JourneyDefinitionDocument extends BaseDocument {
 
     private Integer version;
 
-    private boolean active;
+    private String status;
 
     private List<StateDocument> states;
 

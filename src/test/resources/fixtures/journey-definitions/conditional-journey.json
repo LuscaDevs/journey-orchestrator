@@ -2,7 +2,7 @@
   "journeyCode": "CONDITIONAL_JOURNEY",
   "name": "Conditional Test Journey",
   "version": 1,
-  "active": true,
+  "status": "ATIVA",
   "description": "A journey with conditional transitions based on event data",
   "states": [
     {

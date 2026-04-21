@@ -52,7 +52,7 @@ class MongoPersistenceIntegrationTest {
         document.setName("Test Journey");
         document.setDescription("A test journey for integration testing");
         document.setVersion(1);
-        document.setActive(true);
+        document.setStatus("ATIVA");
 
         // When
         JourneyDefinitionDocument saved = journeyDefinitionRepository.save(document);
@@ -65,7 +65,7 @@ class MongoPersistenceIntegrationTest {
         assertEquals("TEST_JOURNEY", found.get().getJourneyCode());
         assertEquals("Test Journey", found.get().getName());
         assertEquals(1, found.get().getVersion());
-        assertTrue(found.get().isActive());
+        assertEquals("ATIVA", found.get().getStatus());
     }
 
     @Test

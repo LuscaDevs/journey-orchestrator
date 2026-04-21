@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import com.luscadevs.journey.api.generated.JourneysApi;
 import com.luscadevs.journey.api.generated.model.CreateJourneyDefinitionRequest;
 import com.luscadevs.journey.api.generated.model.JourneyDefinitionResponse;
+import com.luscadevs.journey.api.generated.model.UpdateStatusRequest;
 import com.luscadevs.journeyorchestrator.api.mapper.JourneyDefinitionMapper;
 import com.luscadevs.journeyorchestrator.application.engine.ConditionEvaluatorService;
 import com.luscadevs.journeyorchestrator.application.service.JourneyDefinitionService;
@@ -105,6 +107,19 @@ public class JourneyDefinitionController implements JourneysApi {
 
         JourneyDefinition definition =
                 journeyDefinitionService.updateJourneyDefinition(id, request);
+
+        JourneyDefinitionResponse response = JourneyDefinitionMapper.toResponse(definition);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    @PatchMapping("/{id}")
+    public ResponseEntity<JourneyDefinitionResponse> updateJourneyDefinitionStatus(
+            @PathVariable String id, @RequestBody UpdateStatusRequest request) {
+
+        JourneyDefinition definition = journeyDefinitionService.updateJourneyDefinitionStatus(id,
+                request.getStatus().toString());
 
         JourneyDefinitionResponse response = JourneyDefinitionMapper.toResponse(definition);
 
