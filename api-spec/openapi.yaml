@@ -139,6 +139,20 @@ paths:
           description: Journey definition deleted
 
   /journey-instances:
+    get:
+      tags:
+        - Journey Instances
+      summary: List all journey instances
+      operationId: listJourneyInstances
+      responses:
+        "200":
+          description: List of journey instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JourneyInstanceResponse"
     post:
       tags:
         - Journey Instances
