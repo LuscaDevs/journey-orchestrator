@@ -40,6 +40,16 @@ public class JourneyInstance {
         this.history.add(historyEntry);
     }
 
+    public void updateContext(Map<String, Object> newContextData) {
+        if (newContextData != null && !newContextData.isEmpty()) {
+            if (this.context == null) {
+                this.context = new java.util.HashMap<>();
+            }
+            this.context.putAll(newContextData);
+            this.updatedAt = Instant.now();
+        }
+    }
+
     public static JourneyInstance start(String definitionId, Integer version, State initialState,
             Map<String, Object> context) {
 

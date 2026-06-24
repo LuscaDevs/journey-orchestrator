@@ -485,6 +485,9 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/JourneyStatus"
+        context:
+          type: object
+          additionalProperties: true
         createdAt:
           type: string
           format: date-time

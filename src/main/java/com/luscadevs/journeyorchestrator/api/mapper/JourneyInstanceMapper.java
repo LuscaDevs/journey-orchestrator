@@ -17,6 +17,7 @@ public class JourneyInstanceMapper {
         response.version(instance.getJourneyVersion());
         response.currentState(instance.getCurrentState() != null ? instance.getCurrentState().getName() : null);
         response.status(instance.getStatus());
+        response.context(instance.getContext());
 
         response.createdAt(OffsetDateTime.ofInstant(instance.getCreatedAt(), ZoneOffset.UTC));
         response.updatedAt(OffsetDateTime.ofInstant(instance.getUpdatedAt(), ZoneOffset.UTC));

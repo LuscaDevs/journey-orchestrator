@@ -60,6 +60,7 @@ public class JourneyDefinitionController implements JourneysApi {
     }
 
     @Override
+    @GetMapping("/{journeyCode}")
     public ResponseEntity<List<JourneyDefinitionResponse>> getJourneyDefinitionsByCode(
             @NotNull String journeyCode) {
         List<JourneyDefinition> definitions =

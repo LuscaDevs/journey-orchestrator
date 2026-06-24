@@ -93,6 +93,11 @@ public class JourneyInstanceService {
                                 // domínio
                                 journeyEngine.applyEvent(instance, definition, event, eventData);
 
+                                // Update context with event payload
+                                if (eventData instanceof Map) {
+                                    instance.updateContext((Map<String, Object>) eventData);
+                                }
+
                                 JourneyInstance savedInstance =
                                                 journeyInstanceRepository.save(instance);
 
