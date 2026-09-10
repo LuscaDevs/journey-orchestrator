@@ -1,19 +1,24 @@
 package com.luscadevs.journeyorchestrator.domain.engine;
 
-import org.springframework.stereotype.Component;
-
+import com.luscadevs.journeyorchestrator.application.port.in.ConnectorPort;
 import com.luscadevs.journeyorchestrator.domain.journey.Event;
 import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.journey.State;
+import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 import com.luscadevs.journeyorchestrator.domain.journeyinstance.JourneyInstance;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Engine central de execução de jornadas. Responsável por toda a lógica de avaliação de transições,
  * condições e execução do fluxo.
  */
 @Component
+@RequiredArgsConstructor
 public class JourneyEngine {
+    
+    private final ConnectorPort connectorPort;
 
     /**
      * Aplica um evento à instância de jornada executando toda a lógica de fluxo.
@@ -71,12 +76,41 @@ public class JourneyEngine {
         // 4. atualizar estado atual
         journeyInstance.transitionTo(validTransition.getTargetState(), event);
 
-        // 5. verificar se o novo estado é terminal
+        // 5. verificar se o novo estado é SERVICE_TASK e executar connector
         State newState = journeyInstance.getCurrentState();
 
-        if (newState != null && newState
-                .getType() == com.luscadevs.journeyorchestrator.domain.journey.StateType.FINAL) {
+        if (newState != null && newState.getType() == StateType.SERVICE_TASK) {
+            executeConnectorForServiceTask(journeyInstance, newState);
+        }
+
+        // 6. verificar se o novo estado é terminal
+        if (newState != null && newState.getType() == StateType.FINAL) {
             journeyInstance.complete();
+        }
+    }
+
+    /**
+     * Executes connector for a SERVICE_TASK state.
+     * 
+     * @param journeyInstance The journey instance
+     * @param state The SERVICE_TASK state
+     */
+    private void executeConnectorForServiceTask(JourneyInstance journeyInstance, State state) {
+        if (state.getConnectorConfiguration() == null) {
+            throw new IllegalStateException(
+                    "SERVICE_TASK state '" + state.getName() + "' must have connector configuration");
+        }
+
+        try {
+            connectorPort.executeConnector(
+                    journeyInstance.getId(),
+                    state.getId() != null ? state.getId().toString() : state.getName(),
+                    state.getConnectorConfiguration(),
+                    journeyInstance
+            );
+        } catch (Exception e) {
+            // Log error but don't fail the transition - connector errors are handled in the service
+            System.err.println("Connector execution failed for state '" + state.getName() + "': " + e.getMessage());
         }
     }
 

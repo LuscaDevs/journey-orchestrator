@@ -43,6 +43,10 @@ public class JourneyInstanceDocumentMapper {
                 journeyInstance.getUpdatedAt() != null ? journeyInstance.getUpdatedAt().toString()
                         : null);
         document.setVersion(journeyInstance.getVersion());
+        
+        // Note: connectorExecutions are managed separately by ConnectorExecutionRepository
+        // and not directly mapped here to avoid circular dependencies
+        document.setConnectorExecutions(null);
 
         return document;
     }

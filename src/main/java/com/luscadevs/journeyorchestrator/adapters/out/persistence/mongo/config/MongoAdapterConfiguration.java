@@ -23,7 +23,10 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
  */
 @Configuration
 @EnableMongoRepositories(
-        basePackages = "com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.repository")
+        basePackages = {
+            "com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.repository",
+            "com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.connector"
+        })
 @EnableConfigurationProperties(MongoPersistenceProperties.class)
 @Profile("!test")
 public class MongoAdapterConfiguration {

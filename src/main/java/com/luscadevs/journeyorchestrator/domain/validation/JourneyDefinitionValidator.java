@@ -135,6 +135,17 @@ public class JourneyDefinitionValidator {
                 errors.add(ValidationError.ofInvalidStateType(state.getName()));
             }
 
+            // Validar configuração do estado (incluindo connectorConfiguration para SERVICE_TASK)
+            try {
+                state.validate();
+            } catch (IllegalArgumentException e) {
+                errors.add(ValidationError.builder()
+                        .code("INVALID_STATE_CONFIGURATION")
+                        .message("State '" + state.getName() + "' has invalid configuration: " + e.getMessage())
+                        .field("states")
+                        .build());
+            }
+
             // Validar duplicidade de ID (se fornecido)
             if (state.getId() != null) {
                 if (!stateIds.add(state.getId())) {

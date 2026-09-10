@@ -1,5 +1,6 @@
 package com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.document;
 
+import com.luscadevs.journeyorchestrator.adapters.out.persistence.mongo.connector.ConnectorExecutionDocument;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Version;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,6 +38,8 @@ public class JourneyInstanceDocument extends BaseDocument {
     private String completedAt;
 
     private String lastActivityAt;
+
+    private List<ConnectorExecutionDocument> connectorExecutions;
 
     @Version
     private Long version;

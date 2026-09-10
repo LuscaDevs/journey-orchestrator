@@ -1,5 +1,5 @@
 package com.luscadevs.journeyorchestrator.domain.journey;
 
 public enum StateType {
-    INITIAL, INTERMEDIATE, FINAL
+    INITIAL, INTERMEDIATE, FINAL, SERVICE_TASK
 }

@@ -1,0 +1,325 @@
+# OpenAPI Specification Updates for Connector Framework (HTTP Connector)
+# This file contains the changes to be applied to api-spec/openapi.yaml
+
+## Changes to Existing Schemas
+
+### Update StateType Enum
+**Location**: components/schemas/StateType
+**Change**: Add SERVICE_TASK to enum values
+
+```yaml
+StateType:
+  type: string
+  enum:
+    - INITIAL
+    - INTERMEDIATE
+    - FINAL
+    - SERVICE_TASK  # NEW
+```
+
+### Update State Schema
+**Location**: components/schemas/State
+**Change**: Add optional connectorConfiguration property
+
+```yaml
+State:
+  type: object
+  required:
+    - name
+    - type
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the state (UUID v4). Auto-generated if not provided.
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+    type:
+      $ref: "#/components/schemas/StateType"
+    position:
+      type: object
+      description: Visual editor position data (optional, for React Flow integration)
+      properties:
+        x:
+          type: number
+          description: X coordinate
+          example: 100
+        y:
+          type: number
+          description: Y coordinate
+          example: 200
+      required:
+        - x
+        - y
+    connectorConfiguration:  # NEW
+      $ref: "#/components/schemas/ConnectorConfiguration"
+      description: Connector configuration for SERVICE_TASK states
+```
+
+## New Schemas
+
+### ConnectorConfiguration
+```yaml
+ConnectorConfiguration:
+  type: object
+  discriminator:
+    propertyName: connectorType
+  required:
+    - connectorType
+    - timeout
+  properties:
+    connectorType:
+      $ref: "#/components/schemas/ConnectorType"
+    timeout:
+      type: string
+      format: duration
+      description: Maximum execution time (ISO 8601 duration format)
+      default: "PT30S"
+      example: "PT30S"
+```
+
+### ConnectorType
+```yaml
+ConnectorType:
+  type: string
+  enum:
+    - HTTP
+  description: Type of connector to execute
+```
+
+### HttpConnectorConfiguration
+```yaml
+HttpConnectorConfiguration:
+  allOf:
+    - $ref: "#/components/schemas/ConnectorConfiguration"
+    - type: object
+      required:
+        - method
+        - url
+      properties:
+        method:
+          $ref: "#/components/schemas/HttpMethod"
+        url:
+(type: string
+          description: Request URL, may contain context variable placeholders (e.g., ${customerId})
+          example: "https://api.example.com/customers/${customerId}"
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: HTTP headers, values may contain placeholders
+          example:
+            Authorization: "Bearer ${token}"
+            Content-Type: "application/json"
+        queryParams:
+          type: object
+          additionalProperties:
+            type: string
+          description: Query parameters, values may contain placeholders
+          example:
+            limit: "10"
+            offset: "${offset}"
+        body:
+          type: string
+          description: Request body, may contain placeholders
+          example: '{"customerId": "${customerId}", "action": "update"}'
+```
+
+### HttpMethod
+```yaml
+HttpMethod:
+  type: string
+  enum:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+```
+
+### ConnectorExecutionRecord
+```yaml
+ConnectorExecutionRecord:
+  type: object
+  required:
+    - id
+    - journeyInstanceId
+    - stateId
+    - connectorType
+    - connectorConfiguration
+    - startTime
+    - endTime
+    - duration
+    - status
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the execution record
+    journeyInstanceId:
+      type: string
+      description: Reference to the journey instance
+    stateId:
+      type: string
+      description: ID of the state that triggered the connector
+    connectorType:
+      $ref: "#/components/schemas/ConnectorType"
+    connectorConfiguration:
+      type: string
+      description: Serialized configuration (for audit purposes)
+    startTime:
+      type: string
+      format: date-time
+      description: Execution start timestamp
+    endTime:
+      type: string
+      format: date-time
+      description: Execution end timestamp
+    duration:
+      type: string
+      format: duration
+      description: Execution duration (ISO 8601 duration format)
+    status:
+      $ref: "#/components/schemas/ConnectorExecutionStatus"
+    result:
+      type: string
+      description: Execution result (response data, may be truncated for large payloads)
+    errorMessage:
+      type: string
+      description: Error message if execution failed
+```
+
+### ConnectorExecutionStatus
+```yaml
+ConnectorExecutionStatus:
+  type: string
+  enum:
+    - SUCCESS
+    - FAILURE
+```
+
+## New Endpoints
+
+### Get Connector Execution History
+**Location**: /journey-instances/{instanceId}/connector-executions
+**Purpose**: Retrieve connector execution records for a journey instance
+
+```yaml
+/journey-instances/{instanceId}/connector-executions:
+  get:
+    tags:
+      - Journey Instance History
+    summary: Get connector execution history for a journey instance
+    description: Retrieves the complete connector execution history for a specific journey instance in chronological order
+    operationId: getConnectorExecutionHistory
+    parameters:
+      - name: instanceId
+        in: path
+        required: true
+        description: ID of the journey instance
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        description: Filter history from this timestamp (ISO 8601)
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        description: Filter history to this timestamp (ISO 8601)
+        schema:
+          type: string
+          format: date-time
+      - name: status
+        in: query
+        required: false
+        description: Filter by execution status
+        schema:
+          $ref: "#/components/schemas/ConnectorExecutionStatus"
+      - name: limit
+        in: query
+        required: false
+        description: Maximum number of records to return
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 100
+      - name: offset
+        in: query
+        required: false
+        description: Number of records to skip (for pagination)
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Connector execution history retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectorExecutionHistoryResponse"
+      '404':
+        description: Journey instance not found
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      '400':
+        description: Invalid request parameters
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
+```
+
+### ConnectorExecutionHistoryResponse
+```yaml
+ConnectorExecutionHistoryResponse:
+  type: object
+  properties:
+    instanceId:
+      type: string
+      description: ID of the journey instance
+    executions:
+      type: array
+      items:
+        $ref: "#/components/schemas/ConnectorExecutionRecord"
+    pagination:
+      $ref: "#/components/schemas/PaginationInfo"
+    totalCount:
+      type: integer
+      description: Total number of execution records
+```
+
+## Tag Updates
+
+Add new tag to tags section:
+
+```yaml
+tags:
+  - name: Journey Definitions
+  - name: Journey Instances
+  - name: Journey Instance History
+  - name: Connector Executions  # NEW
+```
+
+## Summary of Changes
+
+1. **StateType enum**: Added SERVICE_TASK
+2. **State schema**: Added optional connectorConfiguration property
+3. **New schemas**: ConnectorConfiguration, ConnectorType, HttpConnectorConfiguration, HttpMethod, ConnectorExecutionRecord, ConnectorExecutionStatus, ConnectorExecutionHistoryResponse
+4. **New endpoint**: GET /journey-instances/{instanceId}/connector-executions
+5. **New tag**: Connector Executions
+
+All changes maintain backward compatibility with existing journey definitions and APIs.
