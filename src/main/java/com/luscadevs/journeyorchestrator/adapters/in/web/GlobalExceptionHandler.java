@@ -11,6 +11,7 @@ import com.luscadevs.journeyorchestrator.domain.exception.InvalidConditionSyntax
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ProblemDetail;
@@ -292,6 +293,41 @@ public class GlobalExceptionHandler {
                 clearLoggingContext();
 
                 return ResponseEntity.status(HttpStatus.valueOf(422)).body(problemDetail);
+        }
+
+        /**
+         * Handles DuplicateKeyException from MongoDB when attempting to save a duplicate journey
+         * code/version.
+         *
+         * @param ex The exception that occurred
+         * @param request The HTTP request for context
+         * @return ResponseEntity with ProblemDetail and HTTP 409 status
+         */
+        @ExceptionHandler(DuplicateKeyException.class)
+        public ResponseEntity<ProblemDetail> handleDuplicateKeyException(DuplicateKeyException ex,
+                        HttpServletRequest request) {
+
+                String correlationId = getOrCreateCorrelationId(request);
+                MDC.put(CORRELATION_ID_MDC_KEY, correlationId);
+                MDC.put("requestPath", request.getRequestURI());
+                MDC.put("httpMethod", request.getMethod());
+
+                log.warn("Duplicate key error occurred: {} | Path: {} | CorrelationId: {}",
+                                ex.getMessage(), request.getRequestURI(), correlationId);
+
+                ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                                "A journey definition with this code and version already exists");
+
+                problemDetail.setTitle("Duplicate Key Error");
+                problemDetail.setType(URI.create(
+                                "https://api.journey-orchestrator.com/errors/duplicate_key"));
+                problemDetail.setProperty("errorCode", "DUPLICATE_KEY");
+                problemDetail.setProperty("timestamp", java.time.Instant.now().toString());
+                problemDetail.setProperty("path", request.getRequestURI());
+
+                clearLoggingContext();
+
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
         }
 
         /**

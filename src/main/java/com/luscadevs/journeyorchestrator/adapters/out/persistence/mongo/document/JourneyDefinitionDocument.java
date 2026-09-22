@@ -51,6 +51,23 @@ public class JourneyDefinitionDocument extends BaseDocument {
         private String name;
         private String type;
         private Position position; // Visual editor position data
+        private ConnectorConfigurationDocument connectorConfiguration;
+    }
+
+    /**
+     * Nested connector configuration stored with SERVICE_TASK states.
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ConnectorConfigurationDocument {
+        private String connectorType;
+        private String timeout;
+        private String method;
+        private String url;
+        private Map<String, String> headers;
+        private Map<String, String> queryParams;
+        private String body;
     }
 
     /**

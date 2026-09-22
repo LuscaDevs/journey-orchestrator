@@ -707,6 +707,8 @@ components:
       type: object
       discriminator:
         propertyName: connectorType
+        mapping:
+          HTTP: "#/components/schemas/HttpConnectorConfiguration"
       required:
         - connectorType
         - timeout

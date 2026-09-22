@@ -1,6 +1,5 @@
 package com.luscadevs.journeyorchestrator.application.service;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,9 +7,9 @@ import org.springframework.stereotype.Service;
 import com.luscadevs.journey.api.generated.model.CreateJourneyDefinitionRequest;
 import com.luscadevs.journeyorchestrator.api.mapper.JourneyDefinitionMapper;
 import com.luscadevs.journeyorchestrator.application.port.out.JourneyDefinitionRepositoryPort;
-import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
-import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
 import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionAlreadyExistsException;
+import com.luscadevs.journeyorchestrator.domain.exception.JourneyDefinitionNotFoundException;
+import com.luscadevs.journeyorchestrator.domain.journey.JourneyDefinition;
 import com.luscadevs.journeyorchestrator.domain.validation.JourneyDefinitionValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -53,7 +52,8 @@ public class JourneyDefinitionService {
         }
 
         /**
-         * Get the next version number for a journey code. If no versions exist, returns 1.
+         * Get the next version number for a journey code. If no versions exist, returns
+         * 1.
          * Otherwise, returns latest version + 1.
          */
         private Integer getNextVersion(String journeyCode) {
@@ -83,29 +83,84 @@ public class JourneyDefinitionService {
 
         public JourneyDefinition updateJourneyDefinition(String id,
                         CreateJourneyDefinitionRequest request) {
-                JourneyDefinition definition = JourneyDefinitionMapper.toDomain(request);
-
-                // Validate DSL structure before saving
-                validator.validate(definition);
-
-                // Update the existing journey definition
+                // Retrieve existing definition
                 JourneyDefinition existing = repository.findById(id)
                                 .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
 
-                // Keep the original ID and createdAt, but update other fields including journeyCode
-                // and updatedAt
-                JourneyDefinition updatedDefinition = existing.toBuilder()
-                                .journeyCode(definition.getJourneyCode()).name(definition.getName())
-                                .states(definition.getStates())
-                                .transitions(definition.getTransitions())
-                                .version(definition.getVersion()).updatedAt(Instant.now()).build();
+                // Map request to definition (without id/createdAt)
+                JourneyDefinition incoming = JourneyDefinitionMapper.toDomain(request);
 
-                repository.save(updatedDefinition);
+                // Merge states: preserve connectorConfiguration for SERVICE_TASK when omitted.
+                // Look up by name first, then by UUID as fallback.
+                java.util.Map<String, com.luscadevs.journeyorchestrator.domain.journey.State> existingStateByName = existing
+                                .getStates().stream()
+                                .collect(java.util.stream.Collectors.toMap(
+                                                com.luscadevs.journeyorchestrator.domain.journey.State::getName,
+                                                s -> s));
 
-                return updatedDefinition;
+                java.util.Map<java.util.UUID, com.luscadevs.journeyorchestrator.domain.journey.State> existingStateById = existing
+                                .getStates().stream()
+                                .filter(s -> s.getId() != null)
+                                .collect(java.util.stream.Collectors.toMap(
+                                                com.luscadevs.journeyorchestrator.domain.journey.State::getId,
+                                                s -> s));
+
+                java.util.List<com.luscadevs.journeyorchestrator.domain.journey.State> mergedStates = incoming
+                                .getStates().stream()
+                                .map(s -> {
+                                        if (s.getType() == com.luscadevs.journeyorchestrator.domain.journey.StateType.SERVICE_TASK
+                                                        && s.getConnectorConfiguration() == null) {
+                                                // Try name-based lookup first, then ID-based
+                                                com.luscadevs.journeyorchestrator.domain.journey.State prev = existingStateByName
+                                                                .get(s.getName());
+                                                if (prev == null && s.getId() != null) {
+                                                        prev = existingStateById.get(s.getId());
+                                                }
+                                                if (prev != null && prev.getConnectorConfiguration() != null) {
+                                                        return com.luscadevs.journeyorchestrator.domain.journey.State
+                                                                        .builder()
+                                                                        .id(s.getId())
+                                                                        .name(s.getName())
+                                                                        .type(s.getType())
+                                                                        .position(s.getPosition())
+                                                                        .connectorConfiguration(prev
+                                                                                        .getConnectorConfiguration())
+                                                                        .build();
+                                                }
+                                        }
+                                        return s;
+                                })
+                                .collect(java.util.stream.Collectors.toList());
+
+                // Resolve the initialState from the merged states list (the INITIAL-typed
+                // state)
+                com.luscadevs.journeyorchestrator.domain.journey.State mergedInitialState = mergedStates
+                                .stream()
+                                .filter(s -> s.getType() == com.luscadevs.journeyorchestrator.domain.journey.StateType.INITIAL)
+                                .findFirst()
+                                .orElse(incoming.getInitialState());
+
+                // Build merged definition
+                JourneyDefinition mergedDefinition = existing.toBuilder()
+                                .journeyCode(incoming.getJourneyCode())
+                                .name(incoming.getName())
+                                .states(mergedStates)
+                                .initialState(mergedInitialState)
+                                .transitions(incoming.getTransitions())
+                                .version(incoming.getVersion())
+                                .updatedAt(java.time.Instant.now())
+                                .build();
+
+                // Validate merged definition
+                validator.validate(mergedDefinition);
+
+                // Persist and return
+                repository.save(mergedDefinition);
+                return mergedDefinition;
         }
 
         public JourneyDefinition updateJourneyDefinitionStatus(String id, String status) {
+
                 JourneyDefinition existing = repository.findById(id)
                                 .orElseThrow(() -> new JourneyDefinitionNotFoundException(id));
 
@@ -119,5 +174,4 @@ public class JourneyDefinitionService {
 
                 return updatedDefinition;
         }
-
 }

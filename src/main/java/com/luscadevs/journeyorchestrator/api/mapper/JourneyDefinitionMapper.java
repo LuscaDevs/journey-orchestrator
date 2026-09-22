@@ -1,8 +1,10 @@
 package com.luscadevs.journeyorchestrator.api.mapper;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -48,6 +50,7 @@ public final class JourneyDefinitionMapper {
                                         case "INITIAL" -> domainType = StateType.INITIAL;
                                         case "INTERMEDIATE" -> domainType = StateType.INTERMEDIATE;
                                         case "FINAL" -> domainType = StateType.FINAL;
+                                        case "SERVICE_TASK" -> domainType = StateType.SERVICE_TASK;
                                         default -> throw new IllegalArgumentException(
                                                         "Unknown StateType: "
                                                                         + s.getType().getValue());
@@ -69,7 +72,10 @@ public final class JourneyDefinitionMapper {
                         }
 
                         return State.builder().id(stateId).name(s.getName()).type(domainType)
-                                        .position(position).build();
+                                        .position(position)
+                                        .connectorConfiguration(toDomainConnector(
+                                                        s.getConnectorConfiguration()))
+                                        .build();
                 }).toList();
 
                 // 2️⃣ Criar mapa para lookup rápido
@@ -280,6 +286,8 @@ public final class JourneyDefinitionMapper {
                                                                                 com.luscadevs.journey.api.generated.model.StateType.INTERMEDIATE;
                                                                 case FINAL -> apiType =
                                                                                 com.luscadevs.journey.api.generated.model.StateType.FINAL;
+                                                                case SERVICE_TASK -> apiType =
+                                                                                com.luscadevs.journey.api.generated.model.StateType.SERVICE_TASK;
                                                                 default -> throw new IllegalArgumentException(
                                                                                 "Unknown StateType: "
                                                                                                 + s.getType());
@@ -301,6 +309,11 @@ public final class JourneyDefinitionMapper {
                                                                                         .y(s.getPosition()
                                                                                                         .getY());
                                                         state.setPosition(position);
+                                                }
+
+                                                if (s.getConnectorConfiguration() != null) {
+                                                        state.setConnectorConfiguration(
+                                                                        toApiConnector(s.getConnectorConfiguration()));
                                                 }
 
                                                 return state;
@@ -335,5 +348,74 @@ public final class JourneyDefinitionMapper {
                 }
 
                 return response;
+        }
+
+        private static com.luscadevs.journeyorchestrator.domain.connector.ConnectorConfiguration toDomainConnector(
+                        com.luscadevs.journey.api.generated.model.ConnectorConfiguration apiConfig) {
+                if (apiConfig == null) {
+                        return null;
+                }
+
+                if (apiConfig instanceof com.luscadevs.journey.api.generated.model.HttpConnectorConfiguration http) {
+                        com.luscadevs.journeyorchestrator.domain.connector.http.HttpMethod method =
+                                        http.getMethod() == null ? null
+                                                        : com.luscadevs.journeyorchestrator.domain.connector.http.HttpMethod
+                                                                        .valueOf(http.getMethod()
+                                                                                        .getValue());
+                        try {
+                                return new com.luscadevs.journeyorchestrator.domain.connector.http.HttpConnectorConfiguration(
+                                                method, http.getUrl(), http.getHeaders(),
+                                                http.getQueryParams(), http.getBody(),
+                                                parseTimeout(http.getTimeout()));
+                        } catch (IllegalArgumentException e) {
+                                throw new JourneyDefinitionValidationException(
+                                                "Invalid connector configuration: "
+                                                                + e.getMessage());
+                        }
+                }
+
+                throw new JourneyDefinitionValidationException(
+                                "Unsupported connector configuration. Expected connectorType HTTP.");
+        }
+
+        private static com.luscadevs.journey.api.generated.model.ConnectorConfiguration toApiConnector(
+                        com.luscadevs.journeyorchestrator.domain.connector.ConnectorConfiguration domain) {
+                if (domain == null) {
+                        return null;
+                }
+
+                if (domain instanceof com.luscadevs.journeyorchestrator.domain.connector.http.HttpConnectorConfiguration http) {
+                        com.luscadevs.journey.api.generated.model.HttpConnectorConfiguration api =
+                                        new com.luscadevs.journey.api.generated.model.HttpConnectorConfiguration();
+                        api.setConnectorType(
+                                        com.luscadevs.journey.api.generated.model.ConnectorType.HTTP);
+                        api.setTimeout(http.getTimeout() != null ? http.getTimeout().toString()
+                                        : "PT30S");
+                        api.setMethod(http.getMethod() != null
+                                        ? com.luscadevs.journey.api.generated.model.HttpMethod
+                                                        .fromValue(http.getMethod().name())
+                                        : null);
+                        api.setUrl(http.getUrl());
+                        api.setHeaders(http.getHeaders());
+                        api.setQueryParams(http.getQueryParams());
+                        api.setBody(http.getBody());
+                        return api;
+                }
+
+                throw new IllegalArgumentException("Unsupported connector configuration type: "
+                                + domain.getClass().getSimpleName());
+        }
+
+        private static Duration parseTimeout(String timeout) {
+                if (timeout == null || timeout.isBlank()) {
+                        return Duration.ofSeconds(30);
+                }
+                try {
+                        return Duration.parse(timeout);
+                } catch (DateTimeParseException e) {
+                        throw new JourneyDefinitionValidationException(
+                                        "Invalid connector timeout format: " + timeout
+                                                        + ". Use ISO-8601 duration (e.g. PT30S).");
+                }
         }
 }

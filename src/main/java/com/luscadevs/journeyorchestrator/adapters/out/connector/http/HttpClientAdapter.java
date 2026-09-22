@@ -1,19 +1,22 @@
 package com.luscadevs.journeyorchestrator.adapters.out.connector.http;
 
-import com.luscadevs.journeyorchestrator.domain.connector.exception.ConnectorNetworkException;
-import com.luscadevs.journeyorchestrator.domain.connector.exception.ConnectorTimeoutException;
-import com.luscadevs.journeyorchestrator.domain.connector.http.HttpMethod;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
+import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.luscadevs.journeyorchestrator.domain.connector.exception.ConnectorNetworkException;
+import com.luscadevs.journeyorchestrator.domain.connector.exception.ConnectorTimeoutException;
+import com.luscadevs.journeyorchestrator.domain.connector.http.HttpMethod;
 
 /**
  * Adapter for HTTP client operations using Spring WebClient.
@@ -48,15 +51,21 @@ public class HttpClientAdapter {
     public String execute(HttpMethod method, String url, Map<String, String> headers,
             Map<String, String> queryParams, String body, Duration timeout) {
         try {
+            // Build URI — use URI.create() so that absolute URLs (https://...) are
+            // handled correctly. UriBuilder.path() treats the value as a relative path
+            // and strips the scheme/host, causing "Host is not specified" errors.
+            URI resolvedUri;
+            if (queryParams != null && !queryParams.isEmpty()) {
+                UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+                queryParams.forEach(uriBuilder::queryParam);
+                resolvedUri = uriBuilder.build().toUri();
+            } else {
+                resolvedUri = URI.create(url);
+            }
+
             WebClient.RequestBodySpec request = webClient
                     .method(convertToSpringHttpMethod(method))
-                    .uri(uriBuilder -> {
-                        uriBuilder.path(url);
-                        if (queryParams != null) {
-                            queryParams.forEach(uriBuilder::queryParam);
-                        }
-                        return uriBuilder.build();
-                    });
+                    .uri(resolvedUri);
 
             // Add headers
             if (headers != null && !headers.isEmpty()) {
