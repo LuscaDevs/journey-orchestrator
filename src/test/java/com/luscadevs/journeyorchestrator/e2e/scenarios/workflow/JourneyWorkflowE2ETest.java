@@ -1,21 +1,24 @@
 package com.luscadevs.journeyorchestrator.e2e.scenarios.workflow;
 
-import com.luscadevs.journeyorchestrator.e2e.framework.base.AbstractE2ETest;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.EventPayloadFixtures;
-import com.luscadevs.journeyorchestrator.e2e.framework.util.TestHelper;
-import io.restassured.response.Response;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Map;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
-import java.util.Map;
+import com.luscadevs.journeyorchestrator.e2e.framework.base.AbstractE2ETest;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.EventPayloadFixtures;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
+import com.luscadevs.journeyorchestrator.e2e.framework.util.TestHelper;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.restassured.response.Response;
 
 /**
- * E2E tests validating the complete lifecycle of a journey workflow. Tests the entire journey from
+ * E2E tests validating the complete lifecycle of a journey workflow. Tests the
+ * entire journey from
  * definition creation through completion.
  */
 @TestInstance(Lifecycle.PER_CLASS)
@@ -26,8 +29,8 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
         @DisplayName("Should complete full journey lifecycle with simple flow")
         void shouldCompleteFullJourneyLifecycle() {
                 // Given: Standard context using TestHelper
-                Map<String, Object> initialContext =
-                                TestHelper.createStandardContext("customer-123", 1000.0, "premium");
+                Map<String, Object> initialContext = TestHelper.createStandardContext("customer-123", 1000.0,
+                                "premium");
 
                 // When: Execute complete journey lifecycle using TestHelper
                 String instanceId = TestHelper.executeCompleteJourney(this, initialContext,
@@ -38,7 +41,7 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
                 assertThat(finalResponse.getStatusCode()).isEqualTo(200);
                 assertThat(finalResponse.jsonPath().getString("instanceId")).isEqualTo(instanceId);
                 assertThat(finalResponse.jsonPath().getString("currentState")).isEqualTo("END");
-                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("RUNNING");
+                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("COMPLETED");
         }
 
         @Test
@@ -56,7 +59,7 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
                 assertThat(finalResponse.getStatusCode()).isEqualTo(200);
                 assertThat(finalResponse.jsonPath().getString("instanceId")).isEqualTo(instanceId);
                 assertThat(finalResponse.jsonPath().getString("currentState")).isEqualTo("END");
-                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("RUNNING");
+                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("COMPLETED");
 
                 Response historyResponse = getTransitionHistory(instanceId);
                 assertThat(historyResponse.getStatusCode()).isEqualTo(200);
@@ -67,8 +70,7 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
         @DisplayName("Should handle conditional journey with different paths")
         void shouldHandleConditionalJourney() {
                 // Given: A conditional journey definition and high value event
-                Map<String, Object> journeyDefinition =
-                                JourneyDefinitionFixtures.conditionalJourney();
+                Map<String, Object> journeyDefinition = JourneyDefinitionFixtures.conditionalJourney();
                 Map<String, Object> highValueEvent = EventPayloadFixtures.highValueProcessEvent();
 
                 // When: Create journey definition, start instance, and send high value event
@@ -108,7 +110,7 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
                 assertThat(finalResponse.getStatusCode()).isEqualTo(200);
                 assertThat(finalResponse.jsonPath().getString("instanceId")).isEqualTo(instanceId);
                 assertThat(finalResponse.jsonPath().getString("currentState")).isEqualTo("END");
-                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("RUNNING");
+                assertThat(finalResponse.jsonPath().getString("status")).isEqualTo("COMPLETED");
 
                 Response historyResponse = getTransitionHistory(instanceId);
                 assertThat(historyResponse.getStatusCode()).isEqualTo(200);
@@ -128,9 +130,9 @@ public class JourneyWorkflowE2ETest extends AbstractE2ETest {
                 Response startResponse = startJourneyInstance(journeyCode, version, Map.of());
                 String instanceId = startResponse.jsonPath().getString("instanceId");
 
-                // Simulate completion event (since timeout event doesn't exist in simple journey)
-                Map<String, Object> completionEvent =
-                                EventPayloadFixtures.completionEvent("timeout-test-user");
+                // Simulate completion event (since timeout event doesn't exist in simple
+                // journey)
+                Map<String, Object> completionEvent = EventPayloadFixtures.completionEvent("timeout-test-user");
                 sendEvent(instanceId, "COMPLETE",
                                 (Map<String, Object>) completionEvent.get("payload"));
                 waitForJourneyState(instanceId, "END", 5);

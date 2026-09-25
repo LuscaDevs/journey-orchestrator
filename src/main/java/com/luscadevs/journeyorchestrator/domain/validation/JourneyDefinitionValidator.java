@@ -17,7 +17,8 @@ import com.luscadevs.journeyorchestrator.domain.journey.StateType;
 import com.luscadevs.journeyorchestrator.domain.journey.Transition;
 
 /**
- * Validador robusto para JourneyDefinition que garante consistência estrutural da DSL antes da
+ * Validador robusto para JourneyDefinition que garante consistência estrutural
+ * da DSL antes da
  * execução.
  */
 @Component
@@ -70,10 +71,10 @@ public class JourneyDefinitionValidator {
             // Trim whitespace before validation
             journeyCode = journeyCode.trim();
 
-            // Validate journeyCode format: SNAKE_CASE, max 10 characters
-            if (journeyCode.length() > 10) {
+            // Validate journeyCode format: SNAKE_CASE, max 50 characters
+            if (journeyCode.length() > 50) {
                 errors.add(ValidationError.ofInvalidBasicField("journeyCode",
-                        "Journey code must be maximum 10 characters"));
+                        "Journey code must be maximum 50 characters"));
             }
             if (!journeyCode.matches("^[A-Z0-9_]+$")) {
                 errors.add(ValidationError.ofInvalidBasicField("journeyCode",
@@ -135,7 +136,8 @@ public class JourneyDefinitionValidator {
                 errors.add(ValidationError.ofInvalidStateType(state.getName()));
             }
 
-            // Validar configuração do estado (incluindo connectorConfiguration para SERVICE_TASK)
+            // Validar configuração do estado (incluindo connectorConfiguration para
+            // SERVICE_TASK)
             try {
                 state.validate();
             } catch (IllegalArgumentException e) {
@@ -328,8 +330,7 @@ public class JourneyDefinitionValidator {
         }
 
         // Verificar se o estado inicial está na lista de estados
-        boolean initialStateExists =
-                states.stream().anyMatch(s -> initialState.getName().equals(s.getName()));
+        boolean initialStateExists = states.stream().anyMatch(s -> initialState.getName().equals(s.getName()));
 
         if (!initialStateExists) {
             errors.add(ValidationError.ofInvalidInitialState("Initial state '"
@@ -363,8 +364,7 @@ public class JourneyDefinitionValidator {
 
         // Verificar se estados finais têm transições de saída (recomendado)
         if (transitions != null) {
-            Set<String> finalStateNames =
-                    finalStates.stream().map(State::getName).collect(Collectors.toSet());
+            Set<String> finalStateNames = finalStates.stream().map(State::getName).collect(Collectors.toSet());
 
             for (Transition transition : transitions) {
                 if (transition.getSourceState() != null

@@ -63,22 +63,23 @@ A key-value pair representing a single header or query parameter.
 Runtime state for the connector configuration form.
 
 **Fields**:
-| Field | Type | Purpose |
-|-------|------|---------|
-| `method` | HttpMethod \| null | Currently selected HTTP method |
-| `url` | string | Current URL input |
-| `headers` | ConnectorConfigEntry[] | List of header entries |
-| `queryParams` | ConnectorConfigEntry[] | List of query parameter entries |
-| `body` | string | Current body input |
-| `timeout` | string | Current timeout input |
-| `validationErrors` | object<string, string> | Field-level validation errors |
-| `isDirty` | boolean | True if form has unsaved changes |
-| `isSaving` | boolean | True while API call is in progress |
-| `saveError` | string \| null | API error message if save failed |
+
+| Field              | Type                   | Purpose                            |
+| ------------------ | ---------------------- | ---------------------------------- |
+| `method`           | HttpMethod \| null     | Currently selected HTTP method     |
+| `url`              | string                 | Current URL input                  |
+| `headers`          | ConnectorConfigEntry[] | List of header entries             |
+| `queryParams`      | ConnectorConfigEntry[] | List of query parameter entries    |
+| `body`             | string                 | Current body input                 |
+| `timeout`          | string                 | Current timeout input              |
+| `validationErrors` | object<string, string> | Field-level validation errors      |
+| `isDirty`          | boolean                | True if form has unsaved changes   |
+| `isSaving`         | boolean                | True while API call is in progress |
+| `saveError`        | string \| null         | API error message if save failed   |
 
 **State Transitions**:
 
-```
+```bash
 Initial → UserEditsForm → ValidateOnBlur → UserClicksSave → CallAPI → Success|Error
   ↓                                                                      ↓
   └──────────────────────────────────────────────────────────────────────┘

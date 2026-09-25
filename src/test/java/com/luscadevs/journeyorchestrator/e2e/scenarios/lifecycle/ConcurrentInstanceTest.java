@@ -1,19 +1,9 @@
 package com.luscadevs.journeyorchestrator.e2e.scenarios.lifecycle;
 
-import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.HybridJourneyFixtures;
-import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
-import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +13,26 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+
+import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.HybridJourneyFixtures;
+
+import io.restassured.response.Response;
 
 /**
- * E2E tests for concurrent journey instance execution. Tests that multiple journey instances can
+ * E2E tests for concurrent journey instance execution. Tests that multiple
+ * journey instances can
  * operate independently without interference.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -110,19 +115,18 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
         for (String instanceId : instanceIds) {
             waitForJourneyState(instanceId, "END", 15);
             assertJourneyInstanceState(instanceId, "END");
-            assertJourneyInstanceStatus(instanceId, "RUNNING");
+            assertJourneyInstanceStatus(instanceId, "COMPLETED");
         }
 
         // Verify instances are independent (no interference)
         for (String instanceId : instanceIds) {
             Response instanceResponse = getJourneyInstance(instanceId);
             instanceResponse.then().statusCode(200).body("instanceId", equalTo(instanceId))
-                    .body("currentState", equalTo("END")).body("status", equalTo("RUNNING"));
+                    .body("currentState", equalTo("END")).body("status", equalTo("COMPLETED"));
         }
 
         // Basic performance assertions
-        double averageTime =
-                completionTimes.stream().mapToLong(Long::longValue).average().orElse(0.0);
+        double averageTime = completionTimes.stream().mapToLong(Long::longValue).average().orElse(0.0);
         assertTrue(averageTime < 5000.0, "Average completion time should be reasonable");
 
         executor.shutdown();
@@ -178,7 +182,8 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
             }
         }).toList();
 
-        // Verify each instance maintains its own data (simplified - context not returned by
+        // Verify each instance maintains its own data (simplified - context not
+        // returned by
         // backend)
         for (int i = 0; i < instanceIds.size(); i++) {
             String instanceId = instanceIds.get(i);
@@ -197,8 +202,7 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
     void shouldHandleConcurrentInstancesWithDifferentJourneyDefinitions() {
         // Given: Multiple journey definitions using hybrid fixtures
         Map<String, Object> simpleJourney = hybridFixtures.simpleJourney("SIMPLE_CONCURRENT");
-        Map<String, Object> anotherSimpleJourney =
-                hybridFixtures.simpleJourney("ANOTHER_SIMPLE_CONCURRENT");
+        Map<String, Object> anotherSimpleJourney = hybridFixtures.simpleJourney("ANOTHER_SIMPLE_CONCURRENT");
 
         Response simpleResponse = createJourneyDefinition(simpleJourney);
         Response anotherSimpleResponse = createJourneyDefinition(anotherSimpleJourney);
@@ -219,8 +223,7 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
         // Start 3 simple journey instances
         for (int i = 0; i < 3; i++) {
             CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-                Response startResponse =
-                        startJourneyInstance(simpleJourneyCode, simpleVersion, Map.of());
+                Response startResponse = startJourneyInstance(simpleJourneyCode, simpleVersion, Map.of());
                 assertJourneyInstanceStarted(startResponse);
 
                 String instanceId = startResponse.jsonPath().getString("instanceId");
@@ -275,8 +278,7 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
     @DisplayName("Should handle high concurrency load without degradation")
     void shouldHandleHighConcurrencyLoadWithoutDegradation() {
         // Given: A simple journey definition using hybrid fixtures
-        Map<String, Object> journeyDefinition =
-                hybridFixtures.simpleJourney("HIGH_CONCURRENCY_TEST");
+        Map<String, Object> journeyDefinition = hybridFixtures.simpleJourney("HIGH_CONCURRENCY_TEST");
         Response createResponse = createJourneyDefinition(journeyDefinition);
         assertJourneyDefinitionCreated(createResponse);
 
@@ -320,8 +322,7 @@ public class ConcurrentInstanceTest extends RestAssuredTestBase {
         }).toList();
 
         long totalTime = System.currentTimeMillis() - startTime;
-        double averageTime =
-                completionTimes.stream().mapToLong(Long::longValue).average().orElse(0.0);
+        double averageTime = completionTimes.stream().mapToLong(Long::longValue).average().orElse(0.0);
 
         // Performance assertions
         assertTrue(totalTime < 30000L,

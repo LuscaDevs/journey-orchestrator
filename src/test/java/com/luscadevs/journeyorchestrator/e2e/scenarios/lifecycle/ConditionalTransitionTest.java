@@ -1,9 +1,7 @@
 package com.luscadevs.journeyorchestrator.e2e.scenarios.lifecycle;
 
-import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.HybridJourneyFixtures;
-import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
-import io.restassured.response.Response;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,14 +9,19 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
-import java.util.Map;
+import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.HybridJourneyFixtures;
+
+import io.restassured.response.Response;
 
 /**
- * E2E tests for conditional transitions in journey workflows. Tests journey flows that branch based
+ * E2E tests for conditional transitions in journey workflows. Tests journey
+ * flows that branch based
  * on conditions and expressions.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -51,8 +54,7 @@ public class ConditionalTransitionTest extends RestAssuredTestBase {
         @DisplayName("Should follow correct path based on condition evaluation")
         void shouldFollowCorrectPathBasedOnConditions() {
                 // Given: A journey with conditional transitions using hybrid fixtures
-                Map<String, Object> journeyDefinition =
-                                hybridFixtures.conditionalJourney("conditional-journey");
+                Map<String, Object> journeyDefinition = hybridFixtures.conditionalJourney("CONDITIONAL_JOURNEY_TEST");
                 Response createResponse = createJourneyDefinition(journeyDefinition);
                 assertJourneyDefinitionCreated(createResponse);
 
@@ -82,8 +84,7 @@ public class ConditionalTransitionTest extends RestAssuredTestBase {
         @DisplayName("Should follow alternative path when condition is not met")
         void shouldFollowAlternativePathWhenConditionNotMet() {
                 // Given: A journey with conditional transitions using hybrid fixtures
-                Map<String, Object> journeyDefinition =
-                                hybridFixtures.conditionalJourney("LOW_VALUE_TEST");
+                Map<String, Object> journeyDefinition = hybridFixtures.conditionalJourney("LOW_VALUE_TEST");
                 Response createResponse = createJourneyDefinition(journeyDefinition);
                 assertJourneyDefinitionCreated(createResponse);
 

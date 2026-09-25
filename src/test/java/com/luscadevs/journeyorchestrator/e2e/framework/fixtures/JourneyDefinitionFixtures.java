@@ -13,7 +13,7 @@ public class JourneyDefinitionFixtures {
          */
         public static Map<String, Object> simpleJourney() {
                 return Map.of("journeyCode", "SIMPLE_JOURNEY", "name", "Simple Test Journey",
-                                "version", 1, "status", "ATIVA", "states",
+                                "version", 1, "status", "ATIVA", "active", true, "states",
                                 java.util.List.of(Map.of("name", "START", "type", "INITIAL",
                                                 "description", "Initial state of the journey"),
                                                 Map.of("name", "END", "type", "FINAL",

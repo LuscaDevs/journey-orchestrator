@@ -1,9 +1,13 @@
 package com.luscadevs.journeyorchestrator.e2e.scenarios.contracts;
 
-import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
-import com.luscadevs.journeyorchestrator.e2e.framework.client.JourneyApiClient;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
-import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -17,16 +21,16 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
+import com.luscadevs.journeyorchestrator.e2e.framework.client.JourneyApiClient;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
 
 /**
- * E2E Versioning Tests for Journey Orchestrator. Validates API versioning, backward compatibility,
- * and version handling. Ensures that multiple versions of journeys can coexist and are properly
+ * E2E Versioning Tests for Journey Orchestrator. Validates API versioning,
+ * backward compatibility,
+ * and version handling. Ensures that multiple versions of journeys can coexist
+ * and are properly
  * managed.
  */
 @Tag("contract")
@@ -63,7 +67,8 @@ public class VersioningTest extends RestAssuredTestBase {
     }
 
     /**
-     * Given: Multiple versions of the same journey definition exist When: Client uses specific
+     * Given: Multiple versions of the same journey definition exist When: Client
+     * uses specific
      * version code Then: System should return the correct version
      */
     @Test
@@ -88,15 +93,15 @@ public class VersioningTest extends RestAssuredTestBase {
                 .startJourney(journeyCode, journeyVersion, Map.of("test", "data")).assertStarted();
 
         // Retrieve instance and verify journey code and version are tracked
-        var retrievedInstance =
-                apiClient.getJourneyInstance(instanceResponse.getInstanceId()).assertStarted();
+        var retrievedInstance = apiClient.getJourneyInstance(instanceResponse.getInstanceId()).assertStarted();
 
         assertThat(retrievedInstance.getJourneyCode()).isEqualTo(journeyCode);
         assertThat(retrievedInstance.getVersion()).isEqualTo(journeyVersion);
     }
 
     /**
-     * Given: Journey version is explicitly specified in instance creation request When: Instance is
+     * Given: Journey version is explicitly specified in instance creation request
+     * When: Instance is
      * created with specified version Then: Instance should be created successfully
      */
     @Test
@@ -116,7 +121,8 @@ public class VersioningTest extends RestAssuredTestBase {
     }
 
     /**
-     * Given: Client requests event processing on instance with specific version When: Event is sent
+     * Given: Client requests event processing on instance with specific version
+     * When: Event is sent
      * to instance Then: Event should be processed according to that version's rules
      */
     @Test
@@ -138,7 +144,8 @@ public class VersioningTest extends RestAssuredTestBase {
     }
 
     /**
-     * Given: Instance was created with one journey version When: New version of same journey is
+     * Given: Instance was created with one journey version When: New version of
+     * same journey is
      * created Then: Existing instance should continue with original version
      */
     @Test
@@ -174,15 +181,15 @@ public class VersioningTest extends RestAssuredTestBase {
         assertThat(version2).isEqualTo(2); // v2 was created successfully
 
         // 6. New instance can use v2
-        var instance2 =
-                apiClient.startJourney(journeyCode, version2, Map.of("test", "v2")).assertStarted();
+        var instance2 = apiClient.startJourney(journeyCode, version2, Map.of("test", "v2")).assertStarted();
         assertThat(instance2.getVersion()).isEqualTo(version2);
     }
 
     @DisplayName("Should maintain and track journey version history")
     void shouldMaintainVersionHistory() {
         // Create initial version with unique code
-        String uniqueJourneyCode = "HIST_" + UUID.randomUUID().toString().substring(0, 8);
+        String uniqueJourneyCode = "HIST_"
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT);
         Map<String, Object> v1Journey = new HashMap<>(JourneyDefinitionFixtures.simpleJourney());
         v1Journey.put("journeyCode", uniqueJourneyCode);
 
@@ -192,8 +199,7 @@ public class VersioningTest extends RestAssuredTestBase {
         assertThat(version1).isGreaterThanOrEqualTo(1);
 
         // Create updated version
-        Map<String, Object> v2Journey =
-                new HashMap<>(JourneyDefinitionFixtures.conditionalJourney());
+        Map<String, Object> v2Journey = new HashMap<>(JourneyDefinitionFixtures.conditionalJourney());
         v2Journey.put("journeyCode", uniqueJourneyCode);
 
         var response2 = apiClient.createJourneyDefinition(v2Journey).assertSuccess();

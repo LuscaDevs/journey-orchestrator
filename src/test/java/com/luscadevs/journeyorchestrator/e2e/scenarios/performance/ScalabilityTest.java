@@ -1,9 +1,16 @@
 package com.luscadevs.journeyorchestrator.e2e.scenarios.performance;
 
-import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
-import com.luscadevs.journeyorchestrator.e2e.framework.client.JourneyApiClient;
-import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
-import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -17,14 +24,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.luscadevs.journeyorchestrator.config.MongoTestContainerConfig;
+import com.luscadevs.journeyorchestrator.e2e.framework.base.RestAssuredTestBase;
+import com.luscadevs.journeyorchestrator.e2e.framework.client.JourneyApiClient;
+import com.luscadevs.journeyorchestrator.e2e.framework.fixtures.JourneyDefinitionFixtures;
 
 /**
  * E2E Scalability Tests for Journey Orchestrator.
@@ -282,7 +285,8 @@ public class ScalabilityTest extends RestAssuredTestBase {
     private Map<String, Object> buildComplexJourney(int journeyIndex) {
         Map<String, Object> journey = new java.util.HashMap<>(
                 JourneyDefinitionFixtures.conditionalJourney());
-        journey.put("journeyCode", "COMPLEX_SCALABILITY_" + UUID.randomUUID().toString().substring(0, 8));
+        journey.put("journeyCode", "COMPLEX_SCALABILITY_"
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT));
         return journey;
     }
 

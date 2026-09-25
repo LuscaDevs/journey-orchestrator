@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2026-09-10
 
 ## Active Technologies
+
 - Java 21 (from constitution) + Spring Boot 4.0.3, Spring Data MongoDB, MongoDB Java Driver (002-mongodb-persistence)
 - MongoDB (replacing in-memory storage) (002-mongodb-persistence)
 - Java 21 + Spring Boot 4.0.3, MongoDB, OpenAPI 3.0.3, Lombok (004-transition-history)
@@ -31,17 +32,17 @@ tests/
 
 ## Commands
 
-# Add commands for Java 21 (LTS)
+Add commands for Java 21 (LTS)
 
 ## Code Style
 
 Java 21 (LTS): Follow standard conventions
 
 ## Recent Changes
+
 - 010-http-connector-config: Added TypeScript 5.x / React 19 + React, Vite, Zustand, Tailwind CSS, Radix UI, ReactFlow
 - 009-http-connector: Added Java 21 + Spring Boot 4.0.3, Spring Web, MongoDB Driver, Lombok, Jackson (JSON processing)
 - 008-graph-evolution-refactor: Added Java 21 (LTS) + Spring Boot 4.0.3, MongoDB, OpenAPI 3.0.3, Lombok, Maven, RestAssured 5.4.0, Testcontainers 1.19.7, JUnit 5
-
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
